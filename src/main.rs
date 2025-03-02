@@ -40,8 +40,8 @@ fn extract_people_data(
                 .filter_map(|item| {
                     if item.get("$type").and_then(Value::as_str) == Some("com.linkedin.voyager.dash.search.EntityResultViewModel") {
                         let name = item.pointer("/title/text").and_then(Value::as_str).unwrap_or_default();
-                        let position = item.pointer("/primarySubtitle/text").and_then(Value::as_str).unwrap_or_default();
                         let profile_link = item.get("navigationUrl").and_then(Value::as_str).unwrap_or_default();
+                        let position = item.pointer("/primarySubtitle/text").and_then(Value::as_str).unwrap_or_default();
                         let image_url = item.pointer("/image/attributes/0/detailData/nonEntityProfilePicture/vectorImage/artifacts/0/fileIdentifyingUrlPathSegment")
                             .and_then(Value::as_str)
                             .unwrap_or_default();
