@@ -79,7 +79,7 @@ fn save_people_as_html(
         } else {
             "all"
         },
-        Local::now().format("%d-%m-%Y")
+        Local::now().format("%d-%m-%Y_%H-%M-%S")
     );
     let output_dir = env::current_dir()?.join("output");
     std::fs::create_dir_all(&output_dir)?;

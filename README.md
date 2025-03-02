@@ -62,9 +62,9 @@ cargo run --release "search keywords" true
 ## Output
 
 The script generates an HTML file in the `output` directory with the naming convention:
-`search_query_count_filter-type_date.html`
+`search_query_count_filter-type_date_hour.html`
 
-For example: `software_engineer_125_open-to-work_30-11-2024.html`
+For example: `software_engineer_125_open-to-work_30-02-2025_18-29-34.html`
 
 ## Technical Details
 
