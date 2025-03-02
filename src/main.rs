@@ -209,9 +209,9 @@ async fn final_result(
         eprintln!(
             "No results found for: {} {}",
             if filter_open_to_work {
-                "open-to-work"
+                "open-to-work profiles"
             } else {
-                "all"
+                "all profiles"
             },
             search_query
         );
