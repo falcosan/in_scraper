@@ -207,13 +207,13 @@ async fn final_result(
         save_people_as_html(&people_data, &search_query, filter_open_to_work)?;
     } else {
         eprintln!(
-            "No results found for: {} {}",
+            "No LinkedIn profiles found for search query: '{}' (filter: {})",
+            search_query,
             if filter_open_to_work {
-                "open-to-work profiles"
+                "open-to-work only"
             } else {
                 "all profiles"
-            },
-            search_query
+            }
         );
     }
 
