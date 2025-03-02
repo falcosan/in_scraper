@@ -66,14 +66,6 @@ The script generates an HTML file in the `output` directory with the naming conv
 
 For example: `software_engineer_125_open-to-work_30-02-2025_18-29-34.html`
 
-## Technical Details
-
-- Built in Rust for high performance and memory safety
-- Uses asynchronous processing with Tokio
-- Makes concurrent requests (up to 20 simultaneously) for faster scraping
-- Processes up to 100 search result pages per query
-- Extracts profile data from LinkedIn's embedded JSON data
-
 ## Limitations
 
 This tool is for educational purposes. Use responsibly and respect LinkedIn's terms of service and rate limits.
