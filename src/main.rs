@@ -137,7 +137,7 @@ fn save_people_as_html(
             margin: 10px 0;
         }}
         </style></head><body><ul>"#,
-        sanitized_keyword.replace("_", "").to_uppercase(),
+        sanitized_keyword.replace("_", " ").to_uppercase(),
         people.len()
     )?;
 
