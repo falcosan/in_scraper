@@ -70,21 +70,27 @@ fn save_people_as_html(
     let sanitized_keyword = search_query
         .replace(|c: char| !c.is_alphanumeric(), "_")
         .to_lowercase();
+
+    let filter_type = if filter_open_to_work {
+        "open-to-work"
+    } else {
+        "all"
+    };
+    let people_count = people.len();
+    let formatted_keyword = sanitized_keyword.replace("_", " ").to_uppercase();
+    let timestamp = Local::now().format("%d-%m-%Y_%H-%M-%S");
+    let current_time = Local::now().format("%d/%m/%Y at %H:%M:%S");
+
     let filename = format!(
-        "{}_{}_{}-people_{}.html",
-        sanitized_keyword,
-        people.len(),
-        if filter_open_to_work {
-            "open-to-work"
-        } else {
-            "all"
-        },
-        Local::now().format("%d-%m-%Y_%H-%M-%S")
+        "{}_{}_{}people_{}.html",
+        sanitized_keyword, people_count, filter_type, timestamp
     );
+
     let output_dir = env::current_dir()?.join("output");
     std::fs::create_dir_all(&output_dir)?;
 
-    let mut output = Vec::with_capacity(people.len() * 200);
+    let mut output = Vec::with_capacity(people_count * 200);
+
     write!(
         &mut output,
         r#"<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{} | {} profiles</title><style>
@@ -136,9 +142,8 @@ fn save_people_as_html(
             text-align: center;
             margin: 10px 0;
         }}
-        </style></head><body><ul>"#,
-        sanitized_keyword.replace("_", " ").to_uppercase(),
-        people.len()
+        </style></head><body><h1>{} | {} profiles | {}</h1><ul>"#,
+        formatted_keyword, people_count, formatted_keyword, people_count, current_time
     )?;
 
     for (name, position, image_url, profile_link) in people {
@@ -150,8 +155,11 @@ fn save_people_as_html(
     }
 
     write!(&mut output, "</ul></body></html>")?;
-    std::fs::write(output_dir.join(&filename), &output)?;
-    open::that(output_dir.join(&filename))?;
+
+    let output_file = output_dir.join(&filename);
+    std::fs::write(&output_file, &output)?;
+    open::that(output_file)?;
+
     Ok(())
 }
 
