@@ -27,7 +27,11 @@ cargo build --release
 Before running the scraper, you need to set your LinkedIn session token:
 
 ```bash
-export SEARCH_SESSION_TOKEN="your_linkedin_session_token"
+#!/usr/bin/env bash
+set -euo pipefail
+
+: "${SEARCH_SESSION_TOKEN:=here_the_token}"
+export SEARCH_SESSION_TOKEN
 ```
 
 You can find your LinkedIn session token by:
@@ -49,14 +53,6 @@ To filter for only "Open to Work" profiles:
 
 ```bash
 ./search.sh --open-to-work "search keywords"
-```
-
-### Using cargo directly
-
-```bash
-cargo run --release "search keywords"
-# Or for Open to Work profiles:
-cargo run --release "search keywords" true
 ```
 
 ## Output

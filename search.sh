@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-: "${SEARCH_SESSION_TOKEN:=HERE_THE_TOKEN}"
+: "${SEARCH_SESSION_TOKEN:=here_the_token}" # Replace here_the_token with your LinkedIn session token
 export SEARCH_SESSION_TOKEN
 
 if ! command -v cargo >/dev/null; then
