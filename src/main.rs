@@ -87,7 +87,7 @@ fn save_people_as_html(
     let mut output = Vec::with_capacity(people.len() * 200);
     write!(
         &mut output,
-        r#"<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LinkedIn People Search</title><style>
+        r#"<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{} {} people</title><style>
         body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: #f3f2ef;
@@ -136,7 +136,9 @@ fn save_people_as_html(
             text-align: center;
             margin: 10px 0;
         }}
-        </style></head><body><ul>"#
+        </style></head><body><ul>"#,
+        sanitized_keyword.replace("_", "").to_uppercase(),
+        people.len()
     )?;
 
     for (name, position, image_url, profile_link) in people {
