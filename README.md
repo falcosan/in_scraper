@@ -36,13 +36,13 @@ async fn main() -> Result<()> {
     let person = client.scrape_person("https://www.linkedin.com/in/example").await?;
     println!("Name: {:?}", person.name);
 
-    let people = client.search_people("Software Engineer", Some("San Francisco")).await?;
+    let people = client.search_people("Software Engineer", Some("Rome")).await?;
     println!("Found {} people", people.len());
 
     let company = client.scrape_company("https://www.linkedin.com/company/example").await?;
     println!("Company: {:?}", company.name);
 
-    let jobs = client.search_jobs("Software Engineer", Some("San Francisco")).await?;
+    let jobs = client.search_jobs("Software Engineer", Some("Rome")).await?;
     println!("Found {} jobs", jobs.len());
 
     Ok(())
@@ -125,7 +125,7 @@ in_scraper person "https://www.linkedin.com/in/someone" --output person.json
 in_scraper people "Software Engineer"
 
 # With location
-in_scraper people "Data Scientist" --location "San Francisco, CA"
+in_scraper people "Data Scientist" --location "Rosario, AR"
 
 # Get detailed info for first 3 results
 in_scraper people "Product Manager" --details 3
@@ -154,7 +154,7 @@ in_scraper company "https://www.linkedin.com/company/example-company" --format s
 in_scraper jobs "Software Engineer"
 
 # With location
-in_scraper jobs "Data Scientist" --location "San Francisco, CA"
+in_scraper jobs "Data Scientist" --location "Rosario, AR"
 
 # Get detailed info for first 3 jobs
 in_scraper jobs "Product Manager" --details 3
@@ -189,13 +189,13 @@ in_scraper job "https://www.linkedin.com/jobs/view/1234567890" --format summary
 in_scraper person "https://linkedin.com/in/john-doe" --format summary
 
 # Find professionals
-in_scraper people "Senior Developer" --location "New York" --format table
+in_scraper people "Senior Developer" --location "Rome" --format table
 
 # Company analysis
 in_scraper company "https://linkedin.com/company/tech-startup" --employees --output company_data.json
 
 # Job market research
-in_scraper jobs "Senior Developer" --location "New York" --details 5 --output opportunities.json
+in_scraper jobs "Senior Developer" --location "Rome" --details 5 --output opportunities.json
 ```
 
 #### Automation
