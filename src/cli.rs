@@ -8,10 +8,10 @@ pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
 
-    #[arg(short, long, env = "LINKEDIN_EMAIL")]
+    #[arg(short, long)]
     pub email: Option<String>,
 
-    #[arg(short, long, env = "LINKEDIN_PASSWORD")]
+    #[arg(short, long)]
     pub password: Option<String>,
 
     #[arg(short = 'f', long, default_value = "json")]

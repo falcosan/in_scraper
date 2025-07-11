@@ -11,6 +11,8 @@ use commands::execute_command;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    dotenv::dotenv().ok();
+
     let args = Cli::parse();
 
     let (format, output, verbose) = get_command_options(&args);
