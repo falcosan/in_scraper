@@ -16,10 +16,21 @@ pub mod person {
     pub const EDUCATION_DEGREES: &str = ".t-normal span";
     pub const EDUCATION_DURATIONS: &str = ".t-black--light span";
     pub const EDUCATION_SCHOOL_LINKS: &str = "a[href*='/school/']";
-    pub const SEARCH_CARDS: &[&str] = &[".search-result__wrapper", ".search-result", ".reusable-search__result-container"];
-    pub const SEARCH_TITLES: &[&str] = &[".search-result__result-link", ".app-aware-link", "a[href*='/in/']"];
+    pub const SEARCH_CARDS: &[&str] = &[
+        ".search-result__wrapper",
+        ".search-result",
+        ".reusable-search__result-container",
+    ];
+    pub const SEARCH_TITLES: &[&str] = &[
+        ".search-result__result-link",
+        ".app-aware-link",
+        "a[href*='/in/']",
+    ];
     pub const SEARCH_HEADLINES: &[&str] = &[".subline-level-1", ".entity-result__primary-subtitle"];
-    pub const SEARCH_LOCATIONS: &[&str] = &[".subline-level-2", ".entity-result__secondary-subtitle"];
+    pub const SEARCH_LOCATIONS: &[&str] = &[
+        ".subline-level-2",
+        ".entity-result__secondary-subtitle",
+    ];
 }
 
 pub mod company {
@@ -31,10 +42,17 @@ pub mod company {
     pub const COMPANY_SIZE: &str = ".org-people-bar-graph-module__company-size";
     pub const INDUSTRY: &str = ".org-top-card-summary__industry";
     pub const EMPLOYEES_SECTION: &str = ".org-people-bar-graph-module";
-    pub const SPECIALTIES_ITEMS: &str = ".org-about-company-module__specialties .org-about-company-module__specialties-item";
+    pub const SPECIALTIES_ITEMS: &str =
+        ".org-about-company-module__specialties .org-about-company-module__specialties-item";
     pub const EMPLOYEE_CARDS: &[&str] = &[".org-people-profile-card", ".list-style-none li"];
-    pub const EMPLOYEE_NAMES: &[&str] = &[".org-people-profile-card__profile-title", ".t-16 .t-black .t-bold"];
-    pub const EMPLOYEE_TITLES: &[&str] = &[".org-people-profile-card__profile-info", ".t-14 .t-black--light"];
+    pub const EMPLOYEE_NAMES: &[&str] = &[
+        ".org-people-profile-card__profile-title",
+        ".t-16 .t-black .t-bold",
+    ];
+    pub const EMPLOYEE_TITLES: &[&str] = &[
+        ".org-people-profile-card__profile-info",
+        ".t-14 .t-black--light",
+    ];
     pub const EMPLOYEE_LINKS: &str = "a[href*='/in/']";
 }
 
@@ -46,10 +64,14 @@ pub mod job {
     pub const POSTED_DATE: &str = ".jobs-unified-top-card__posted-date";
     pub const APPLICANT_COUNT: &str = ".jobs-unified-top-card__applicant-count";
     pub const COMPANY_LINK: &str = ".job-details-jobs-unified-top-card__company-name a";
-    pub const JOB_INSIGHTS: &str = ".job-details-jobs-unified-top-card__job-insight .job-details-jobs-unified-top-card__job-insight-value-list li";
+    pub const JOB_INSIGHTS: &str =
+        ".job-details-jobs-unified-top-card__job-insight .job-details-jobs-unified-top-card__job-insight-value-list li";
     pub const SEARCH_CARDS: &[&str] = &[".job-search-card", ".jobs-search-results__list-item"];
     pub const SEARCH_TITLES: &[&str] = &[".job-search-card__title a", "h3 a"];
-    pub const SEARCH_COMPANIES: &[&str] = &[".job-search-card__subtitle", ".job-search-card__subtitle-link"];
+    pub const SEARCH_COMPANIES: &[&str] = &[
+        ".job-search-card__subtitle",
+        ".job-search-card__subtitle-link",
+    ];
     pub const SEARCH_LOCATIONS: &str = ".job-search-card__location";
     pub const SEARCH_POSTED_DATES: &[&str] = &[".job-search-card__listdate", ".job-posted-date"];
     pub const SEARCH_COMPANY_LINKS: &str = "a[href*='/company/']";
@@ -61,4 +83,4 @@ pub mod auth {
     pub const LOGIN_BUTTON: &str = ".btn__primary--large";
     pub const CSRF_TOKEN: &str = "input[name='loginCsrfParam']";
     pub const VERIFICATION_ELEMENT: &str = ".global-nav__primary-link";
-} 
+}

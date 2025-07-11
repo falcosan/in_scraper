@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::{ Deserialize, Serialize };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Contact {
@@ -161,4 +161,4 @@ impl Job {
             seniority_level: None,
         }
     }
-} 
+}

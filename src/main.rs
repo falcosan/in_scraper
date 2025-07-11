@@ -1,12 +1,12 @@
 use clap::Parser;
-use std::io::{self, Write};
+use std::io::{ self, Write };
 use rpassword::read_password;
-use in_scraper::{LinkedInClient, Result};
+use in_scraper::{ LinkedInClient, Result };
 
 mod cli;
 mod commands;
 
-use cli::{Cli, OutputFormat};
+use cli::{ Cli, OutputFormat };
 use commands::execute_command;
 
 #[tokio::main]
@@ -21,47 +21,36 @@ async fn main() -> Result<()> {
         eprintln!("in_scraper v{}", env!("CARGO_PKG_VERSION"));
     }
 
-    let email = get_credential(
-        args.email,
-        "LinkedIn Email",
-        "LINKEDIN_EMAIL",
-        false,
-    )?;
-    
-    let password = get_credential(
-        args.password,
-        "LinkedIn Password",
-        "LINKEDIN_PASSWORD",
-        true,
-    )?;
+    let email = get_credential(args.email, "LinkedIn Email", "LINKEDIN_EMAIL", false)?;
+
+    let password = get_credential(args.password, "LinkedIn Password", "LINKEDIN_PASSWORD", true)?;
 
     if verbose {
         eprintln!("Logging into LinkedIn...");
     }
 
-    let client = LinkedInClient::login_with_retry(&email, &password, 2).await
-        .map_err(|e| {
-            match &e {
-                in_scraper::LinkedInError::AuthenticationFailed => {
-                    eprintln!("Authentication failed. Please check your LinkedIn credentials.");
-                    eprintln!("Make sure you can log in via web browser first.");
-                }
-                in_scraper::LinkedInError::Unknown(msg) if msg.contains("challenge") => {
-                    eprintln!("LinkedIn security challenge detected.");
-                    eprintln!("{msg}");
-                    eprintln!("\nRun './linkedin_auth_guide.sh' for detailed troubleshooting steps.");
-                }
-                in_scraper::LinkedInError::RateLimited => {
-                    eprintln!("Rate limited by LinkedIn. Please wait and try again later.");
-                }
-                _ => {
-                    eprintln!("Failed to login to LinkedIn: {e}");
-                    eprintln!("Please check your credentials and network connection.");
-                    eprintln!("Run './linkedin_auth_guide.sh' for troubleshooting help.");
-                }
+    let client = LinkedInClient::login_with_retry(&email, &password, 2).await.map_err(|e| {
+        match &e {
+            in_scraper::LinkedInError::AuthenticationFailed => {
+                eprintln!("Authentication failed. Please check your LinkedIn credentials.");
+                eprintln!("Make sure you can log in via web browser first.");
             }
-            e
-        })?;
+            in_scraper::LinkedInError::Unknown(msg) if msg.contains("challenge") => {
+                eprintln!("LinkedIn security challenge detected.");
+                eprintln!("{msg}");
+                eprintln!("\nRun './linkedin_auth_guide.sh' for detailed troubleshooting steps.");
+            }
+            in_scraper::LinkedInError::RateLimited => {
+                eprintln!("Rate limited by LinkedIn. Please wait and try again later.");
+            }
+            _ => {
+                eprintln!("Failed to login to LinkedIn: {e}");
+                eprintln!("Please check your credentials and network connection.");
+                eprintln!("Run './linkedin_auth_guide.sh' for troubleshooting help.");
+            }
+        }
+        e
+    })?;
 
     if verbose {
         eprintln!("Successfully logged in!");
@@ -79,19 +68,39 @@ fn get_command_options(args: &Cli) -> (OutputFormat, Option<String>, bool) {
 
     match &args.command {
         cli::Commands::Person { format, output, verbose, .. } => {
-            (format.clone().unwrap_or(global_format), output.clone().or(global_output), *verbose || global_verbose)
+            (
+                format.clone().unwrap_or(global_format),
+                output.clone().or(global_output),
+                *verbose || global_verbose,
+            )
         }
         cli::Commands::People { format, output, verbose, .. } => {
-            (format.clone().unwrap_or(global_format), output.clone().or(global_output), *verbose || global_verbose)
+            (
+                format.clone().unwrap_or(global_format),
+                output.clone().or(global_output),
+                *verbose || global_verbose,
+            )
         }
         cli::Commands::Company { format, output, verbose, .. } => {
-            (format.clone().unwrap_or(global_format), output.clone().or(global_output), *verbose || global_verbose)
+            (
+                format.clone().unwrap_or(global_format),
+                output.clone().or(global_output),
+                *verbose || global_verbose,
+            )
         }
         cli::Commands::Jobs { format, output, verbose, .. } => {
-            (format.clone().unwrap_or(global_format), output.clone().or(global_output), *verbose || global_verbose)
+            (
+                format.clone().unwrap_or(global_format),
+                output.clone().or(global_output),
+                *verbose || global_verbose,
+            )
         }
         cli::Commands::Job { format, output, verbose, .. } => {
-            (format.clone().unwrap_or(global_format), output.clone().or(global_output), *verbose || global_verbose)
+            (
+                format.clone().unwrap_or(global_format),
+                output.clone().or(global_output),
+                *verbose || global_verbose,
+            )
         }
     }
 }
@@ -100,7 +109,7 @@ fn get_credential(
     provided: Option<String>,
     prompt: &str,
     env_var: &str,
-    is_password: bool,
+    is_password: bool
 ) -> Result<String> {
     if let Some(cred) = provided {
         return Ok(cred);
@@ -119,17 +128,18 @@ fn get_credential(
         })?
     } else {
         let mut input = String::new();
-        io::stdin().read_line(&mut input).map_err(|e| {
-            in_scraper::LinkedInError::Unknown(format!("Failed to read input: {e}"))
-        })?;
+        io
+            ::stdin()
+            .read_line(&mut input)
+            .map_err(|e| {
+                in_scraper::LinkedInError::Unknown(format!("Failed to read input: {e}"))
+            })?;
         input.trim().to_string()
     };
 
     if credential.is_empty() {
-        return Err(in_scraper::LinkedInError::Unknown(
-            format!("{prompt} cannot be empty")
-        ));
+        return Err(in_scraper::LinkedInError::Unknown(format!("{prompt} cannot be empty")));
     }
 
     Ok(credential)
-} 
+}

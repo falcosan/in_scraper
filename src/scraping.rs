@@ -3,7 +3,7 @@ use scraper::Html;
 use crate::selectors;
 use crate::error::Result;
 use crate::client::LinkedInClient;
-use crate::models::{Person, Experience, Education, Job, Company, Employee};
+use crate::models::{ Person, Experience, Education, Job, Company, Employee };
 
 impl LinkedInClient {
     pub async fn scrape_person(&self, linkedin_url: &str) -> Result<Person> {
@@ -14,11 +14,9 @@ impl LinkedInClient {
         person.headline = self.extract_text_by_selector(&document, selectors::person::HEADLINE);
         person.location = self.extract_text_by_selector(&document, selectors::person::LOCATION);
         person.about = self.extract_text_by_selector(&document, selectors::person::ABOUT);
-        person.open_to_work = self.extract_attribute_by_selector(
-            &document,
-            selectors::person::OPEN_TO_WORK,
-            "title"
-        ).is_some();
+        person.open_to_work = self
+            .extract_attribute_by_selector(&document, selectors::person::OPEN_TO_WORK, "title")
+            .is_some();
 
         person.experiences = self.extract_experiences(&document)?;
         person.educations = self.extract_educations(&document)?;
@@ -42,9 +40,12 @@ impl LinkedInClient {
 
     fn extract_people_listings(&self, document: &Html) -> Result<Vec<Person>> {
         let mut people = Vec::new();
-        
-        let person_card_selector = self.select_working_selector(document, selectors::person::SEARCH_CARDS)?;
-        
+
+        let person_card_selector = self.select_working_selector(
+            document,
+            selectors::person::SEARCH_CARDS
+        )?;
+
         for person_card in document.select(&person_card_selector) {
             if let Some(person) = self.parse_person_card(&person_card) {
                 people.push(person);
@@ -55,14 +56,22 @@ impl LinkedInClient {
     }
 
     fn parse_person_card(&self, card: &scraper::ElementRef) -> Option<Person> {
-        let title_selector = self.select_working_selector_for_element(card, selectors::person::SEARCH_TITLES).ok()?;
-        let headline_selector = self.select_working_selector_for_element(card, selectors::person::SEARCH_HEADLINES).ok()?;
-        let location_selector = self.select_working_selector_for_element(card, selectors::person::SEARCH_LOCATIONS).ok()?;
+        let title_selector = self
+            .select_working_selector_for_element(card, selectors::person::SEARCH_TITLES)
+            .ok()?;
+        let headline_selector = self
+            .select_working_selector_for_element(card, selectors::person::SEARCH_HEADLINES)
+            .ok()?;
+        let location_selector = self
+            .select_working_selector_for_element(card, selectors::person::SEARCH_LOCATIONS)
+            .ok()?;
 
         let title_element = card.select(&title_selector).next()?;
         let name = title_element.text().collect::<String>().trim().to_string();
-        
-        let linkedin_url = title_element.value().attr("href")
+
+        let linkedin_url = title_element
+            .value()
+            .attr("href")
             .map(|href| {
                 if href.starts_with("http") {
                     href.to_string()
@@ -71,11 +80,13 @@ impl LinkedInClient {
                 }
             })?;
 
-        let headline = card.select(&headline_selector)
+        let headline = card
+            .select(&headline_selector)
             .next()
             .map(|el| el.text().collect::<String>().trim().to_string());
 
-        let location = card.select(&location_selector)
+        let location = card
+            .select(&location_selector)
             .next()
             .map(|el| el.text().collect::<String>().trim().to_string());
 
@@ -89,12 +100,14 @@ impl LinkedInClient {
 
     fn extract_experiences(&self, document: &Html) -> Result<Vec<Experience>> {
         let mut experiences = Vec::new();
-        
-        let experience_section_selector = self.make_selector(selectors::person::EXPERIENCE_SECTION)?;
-        
+
+        let experience_section_selector = self.make_selector(
+            selectors::person::EXPERIENCE_SECTION
+        )?;
+
         if let Some(experience_section) = document.select(&experience_section_selector).next() {
             let item_selector = self.make_selector(selectors::person::EXPERIENCE_ITEMS)?;
-            
+
             for item in experience_section.select(&item_selector) {
                 if let Some(experience) = self.parse_experience_item(&item) {
                     experiences.push(experience);
@@ -110,27 +123,36 @@ impl LinkedInClient {
         let company_selector = self.make_selector(selectors::person::EXPERIENCE_COMPANIES).ok()?;
         let duration_selector = self.make_selector(selectors::person::EXPERIENCE_INFO).ok()?;
         let location_selector = self.make_selector(selectors::person::EXPERIENCE_INFO).ok()?;
-        let company_link_selector = self.make_selector(selectors::person::EXPERIENCE_COMPANY_LINKS).ok()?;
+        let company_link_selector = self
+            .make_selector(selectors::person::EXPERIENCE_COMPANY_LINKS)
+            .ok()?;
 
-        let title = item.select(&title_selector)
+        let title = item
+            .select(&title_selector)
             .next()
             .map(|el| el.text().collect::<String>().trim().to_string());
 
-        let company = item.select(&company_selector)
+        let company = item
+            .select(&company_selector)
             .nth(1)
             .map(|el| el.text().collect::<String>().trim().to_string());
 
-        let duration_text = item.select(&duration_selector)
+        let duration_text = item
+            .select(&duration_selector)
             .next()
             .map(|el| el.text().collect::<String>().trim().to_string());
 
-        let (from_date, to_date, duration) = self.parse_duration(&duration_text.unwrap_or_default());
+        let (from_date, to_date, duration) = self.parse_duration(
+            &duration_text.unwrap_or_default()
+        );
 
-        let location = item.select(&location_selector)
+        let location = item
+            .select(&location_selector)
             .last()
             .map(|el| el.text().collect::<String>().trim().to_string());
 
-        let company_linkedin_url = item.select(&company_link_selector)
+        let company_linkedin_url = item
+            .select(&company_link_selector)
             .next()
             .and_then(|el| el.value().attr("href"))
             .map(|href| {
@@ -155,12 +177,12 @@ impl LinkedInClient {
 
     fn extract_educations(&self, document: &Html) -> Result<Vec<Education>> {
         let mut educations = Vec::new();
-        
-        let education_section_selector = self.make_selector(selectors::person::EDUCATION_SECTION)? ;
+
+        let education_section_selector = self.make_selector(selectors::person::EDUCATION_SECTION)?;
 
         if let Some(education_section) = document.select(&education_section_selector).next() {
             let item_selector = self.make_selector(selectors::person::EDUCATION_ITEMS)?;
-            
+
             for item in education_section.select(&item_selector) {
                 if let Some(education) = self.parse_education_item(&item) {
                     educations.push(education);
@@ -175,23 +197,29 @@ impl LinkedInClient {
         let school_selector = self.make_selector(selectors::person::EDUCATION_SCHOOLS).ok()?;
         let degree_selector = self.make_selector(selectors::person::EDUCATION_DEGREES).ok()?;
         let duration_selector = self.make_selector(selectors::person::EDUCATION_DURATIONS).ok()?;
-        let school_link_selector = self.make_selector(selectors::person::EDUCATION_SCHOOL_LINKS).ok()?;
+        let school_link_selector = self
+            .make_selector(selectors::person::EDUCATION_SCHOOL_LINKS)
+            .ok()?;
 
-        let school = item.select(&school_selector)
+        let school = item
+            .select(&school_selector)
             .next()
             .map(|el| el.text().collect::<String>().trim().to_string());
 
-        let degree = item.select(&degree_selector)
+        let degree = item
+            .select(&degree_selector)
             .next()
             .map(|el| el.text().collect::<String>().trim().to_string());
 
-        let duration_text = item.select(&duration_selector)
+        let duration_text = item
+            .select(&duration_selector)
             .next()
             .map(|el| el.text().collect::<String>().trim().to_string());
 
         let (from_date, to_date, _) = self.parse_duration(&duration_text.unwrap_or_default());
 
-        let school_linkedin_url = item.select(&school_link_selector)
+        let school_linkedin_url = item
+            .select(&school_link_selector)
             .next()
             .and_then(|el| el.value().attr("href"))
             .map(|href| {
@@ -213,15 +241,21 @@ impl LinkedInClient {
         })
     }
 
-    fn parse_duration(&self, duration_text: &str) -> (Option<String>, Option<String>, Option<String>) {
+    fn parse_duration(
+        &self,
+        duration_text: &str
+    ) -> (Option<String>, Option<String>, Option<String>) {
         let duration_regex = Regex::new(r"(\w+\s+\d{4})\s*[-–]\s*(\w+\s+\d{4}|Present)").unwrap();
-        
+
         if let Some(captures) = duration_regex.captures(duration_text) {
             let from_date = captures.get(1).map(|m| m.as_str().to_string());
             let to_date = captures.get(2).map(|m| m.as_str().to_string());
-            
+
             let duration = if duration_text.contains("·") {
-                duration_text.split("·").nth(1).map(|s| s.trim().to_string())
+                duration_text
+                    .split("·")
+                    .nth(1)
+                    .map(|s| s.trim().to_string())
             } else {
                 None
             };
@@ -241,7 +275,12 @@ impl LinkedInClient {
         job.description = self.extract_text_by_selector(&document, selectors::job::DESCRIPTION);
         job.posted_date = self.extract_text_by_selector(&document, selectors::job::POSTED_DATE);
 
-        if let Some(applicant_text) = self.extract_text_by_selector(&document, selectors::job::APPLICANT_COUNT) {
+        if
+            let Some(applicant_text) = self.extract_text_by_selector(
+                &document,
+                selectors::job::APPLICANT_COUNT
+            )
+        {
             job.applicant_count = self.parse_applicant_count(&applicant_text);
         }
 
@@ -273,9 +312,12 @@ impl LinkedInClient {
 
     fn extract_job_listings(&self, document: &Html) -> Result<Vec<Job>> {
         let mut jobs = Vec::new();
-        
-        let job_card_selector = self.select_working_selector(document, selectors::job::SEARCH_CARDS)?;
-        
+
+        let job_card_selector = self.select_working_selector(
+            document,
+            selectors::job::SEARCH_CARDS
+        )?;
+
         for job_card in document.select(&job_card_selector) {
             if let Some(job) = self.parse_job_card(&job_card) {
                 jobs.push(job);
@@ -286,18 +328,26 @@ impl LinkedInClient {
     }
 
     fn parse_job_card(&self, card: &scraper::ElementRef) -> Option<Job> {
-        let title_selector = self.select_working_selector_for_element(card, selectors::job::SEARCH_TITLES).ok()?;
-        
-        let company_selector = self.select_working_selector_for_element(card, selectors::job::SEARCH_COMPANIES).ok()?;
-        
+        let title_selector = self
+            .select_working_selector_for_element(card, selectors::job::SEARCH_TITLES)
+            .ok()?;
+
+        let company_selector = self
+            .select_working_selector_for_element(card, selectors::job::SEARCH_COMPANIES)
+            .ok()?;
+
         let location_selector = self.make_selector(selectors::job::SEARCH_LOCATIONS).ok()?;
-        
-        let posted_date_selector = self.select_working_selector_for_element(card, selectors::job::SEARCH_POSTED_DATES).ok()?;
+
+        let posted_date_selector = self
+            .select_working_selector_for_element(card, selectors::job::SEARCH_POSTED_DATES)
+            .ok()?;
 
         let title_element = card.select(&title_selector).next()?;
         let title = title_element.text().collect::<String>().trim().to_string();
-        
-        let linkedin_url = title_element.value().attr("href")
+
+        let linkedin_url = title_element
+            .value()
+            .attr("href")
             .map(|href| {
                 if href.starts_with("http") {
                     href.to_string()
@@ -306,20 +356,24 @@ impl LinkedInClient {
                 }
             })?;
 
-        let company = card.select(&company_selector)
+        let company = card
+            .select(&company_selector)
             .next()
             .map(|el| el.text().collect::<String>().trim().to_string());
 
-        let location = card.select(&location_selector)
+        let location = card
+            .select(&location_selector)
             .next()
             .map(|el| el.text().collect::<String>().trim().to_string());
 
-        let posted_date = card.select(&posted_date_selector)
+        let posted_date = card
+            .select(&posted_date_selector)
             .next()
             .map(|el| el.text().collect::<String>().trim().to_string());
 
         let company_link_selector = self.make_selector(selectors::job::SEARCH_COMPANY_LINKS).ok()?;
-        let company_linkedin_url = card.select(&company_link_selector)
+        let company_linkedin_url = card
+            .select(&company_link_selector)
             .next()
             .and_then(|el| el.value().attr("href"))
             .map(|href| {
@@ -347,7 +401,8 @@ impl LinkedInClient {
 
     fn parse_applicant_count(&self, applicant_text: &str) -> Option<i32> {
         let count_regex = Regex::new(r"(\d+)").unwrap();
-        count_regex.captures(applicant_text)
+        count_regex
+            .captures(applicant_text)
             .and_then(|captures| captures.get(1))
             .and_then(|count_match| count_match.as_str().parse().ok())
     }
@@ -356,11 +411,11 @@ impl LinkedInClient {
         self.extract_multiple_text_by_selector(document, selectors::job::JOB_INSIGHTS)
             .into_iter()
             .find(|text| {
-                text.contains("Full-time") || 
-                text.contains("Part-time") || 
-                text.contains("Contract") || 
-                text.contains("Temporary") ||
-                text.contains("Internship")
+                text.contains("Full-time") ||
+                    text.contains("Part-time") ||
+                    text.contains("Contract") ||
+                    text.contains("Temporary") ||
+                    text.contains("Internship")
             })
     }
 
@@ -368,11 +423,11 @@ impl LinkedInClient {
         self.extract_multiple_text_by_selector(document, selectors::job::JOB_INSIGHTS)
             .into_iter()
             .find(|text| {
-                text.contains("Entry level") || 
-                text.contains("Associate") || 
-                text.contains("Mid-Senior level") || 
-                text.contains("Director") ||
-                text.contains("Executive")
+                text.contains("Entry level") ||
+                    text.contains("Associate") ||
+                    text.contains("Mid-Senior level") ||
+                    text.contains("Director") ||
+                    text.contains("Executive")
             })
     }
     pub async fn scrape_company(&self, linkedin_url: &str) -> Result<Company> {
@@ -381,12 +436,27 @@ impl LinkedInClient {
 
         company.name = self.extract_text_by_selector(&document, selectors::company::NAME);
         company.about = self.extract_text_by_selector(&document, selectors::company::ABOUT);
-        company.website = self.extract_attribute_by_selector(&document, selectors::company::WEBSITE, "href");
-        company.headquarters = self.extract_text_by_selector(&document, selectors::company::HEADQUARTERS);
+        company.website = self.extract_attribute_by_selector(
+            &document,
+            selectors::company::WEBSITE,
+            "href"
+        );
+        company.headquarters = self.extract_text_by_selector(
+            &document,
+            selectors::company::HEADQUARTERS
+        );
         company.industry = self.extract_text_by_selector(&document, selectors::company::INDUSTRY);
-        company.company_size = self.extract_text_by_selector(&document, selectors::company::COMPANY_SIZE);
+        company.company_size = self.extract_text_by_selector(
+            &document,
+            selectors::company::COMPANY_SIZE
+        );
 
-        if let Some(founded_text) = self.extract_text_by_selector(&document, selectors::company::FOUNDED) {
+        if
+            let Some(founded_text) = self.extract_text_by_selector(
+                &document,
+                selectors::company::FOUNDED
+            )
+        {
             company.founded = self.parse_founded_year(&founded_text);
         }
 
@@ -408,9 +478,12 @@ impl LinkedInClient {
 
     fn extract_employees(&self, document: &Html) -> Result<Vec<Employee>> {
         let mut employees = Vec::new();
-        
-        let employee_selector = self.select_working_selector(document, selectors::company::EMPLOYEE_CARDS)?;
-        
+
+        let employee_selector = self.select_working_selector(
+            document,
+            selectors::company::EMPLOYEE_CARDS
+        )?;
+
         for employee_element in document.select(&employee_selector) {
             if let Some(employee) = self.parse_employee_item(&employee_element) {
                 employees.push(employee);
@@ -421,21 +494,28 @@ impl LinkedInClient {
     }
 
     fn parse_employee_item(&self, item: &scraper::ElementRef) -> Option<Employee> {
-        let name_selector = self.select_working_selector_for_element(item, selectors::company::EMPLOYEE_NAMES).ok()?;
-        
-        let title_selector = self.select_working_selector_for_element(item, selectors::company::EMPLOYEE_TITLES).ok()?;
-        
+        let name_selector = self
+            .select_working_selector_for_element(item, selectors::company::EMPLOYEE_NAMES)
+            .ok()?;
+
+        let title_selector = self
+            .select_working_selector_for_element(item, selectors::company::EMPLOYEE_TITLES)
+            .ok()?;
+
         let link_selector = self.make_selector(selectors::company::EMPLOYEE_LINKS).ok()?;
 
-        let name = item.select(&name_selector)
+        let name = item
+            .select(&name_selector)
             .next()
             .map(|el| el.text().collect::<String>().trim().to_string())?;
 
-        let title = item.select(&title_selector)
+        let title = item
+            .select(&title_selector)
             .next()
             .map(|el| el.text().collect::<String>().trim().to_string());
 
-        let linkedin_url = item.select(&link_selector)
+        let linkedin_url = item
+            .select(&link_selector)
             .next()
             .and_then(|el| el.value().attr("href"))
             .map(|href| {
@@ -455,8 +535,9 @@ impl LinkedInClient {
 
     fn parse_founded_year(&self, founded_text: &str) -> Option<i32> {
         let year_regex = Regex::new(r"\b(\d{4})\b").unwrap();
-        year_regex.captures(founded_text)
+        year_regex
+            .captures(founded_text)
             .and_then(|captures| captures.get(1))
             .and_then(|year_match| year_match.as_str().parse().ok())
     }
-} 
+}

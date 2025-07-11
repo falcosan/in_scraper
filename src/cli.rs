@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::{ Parser, Subcommand };
 
 #[derive(Parser)]
 #[command(name = "in_scraper")]
@@ -100,4 +100,4 @@ impl std::fmt::Display for OutputFormat {
             OutputFormat::Summary => write!(f, "summary"),
         }
     }
-} 
+}
