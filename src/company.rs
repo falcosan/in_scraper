@@ -28,7 +28,7 @@ impl LinkedInClient {
     }
 
     pub async fn scrape_company_employees(&self, company_url: &str) -> Result<Vec<Employee>> {
-        let employees_url = format!("{}/people", company_url);
+        let employees_url = format!("{company_url}/people");
         let document = self.get_html(&employees_url).await?;
         Ok(self.extract_employees(&document))
     }
@@ -78,7 +78,7 @@ impl LinkedInClient {
                 if href.starts_with("http") {
                     href.to_string()
                 } else {
-                    format!("https://linkedin.com{}", href)
+                    format!("https://linkedin.com{href}")
                 }
             });
 

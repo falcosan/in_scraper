@@ -156,7 +156,7 @@ impl LinkedInClient {
 
     pub fn extract_multiple_text_by_selector(&self, document: &Html, selector_str: &str) -> Vec<String> {
         let selector = Selector::parse(selector_str).unwrap_or_else(|_| {
-            panic!("Invalid selector: {}", selector_str)
+            panic!("Invalid selector: {selector_str}")
         });
         
         document
@@ -176,7 +176,7 @@ impl LinkedInClient {
     }
 
     pub async fn is_logged_in(&self) -> bool {
-        match self.client.get(&format!("{}/feed", self.base_url)).send().await {
+        match self.client.get(format!("{}/feed", self.base_url)).send().await {
             Ok(response) => {
                 let url = response.url().to_string();
                 !url.contains("/login") && !url.contains("/checkpoint") && (

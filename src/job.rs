@@ -82,7 +82,7 @@ impl LinkedInClient {
                 if href.starts_with("http") {
                     href.to_string()
                 } else {
-                    format!("https://linkedin.com{}", href)
+                    format!("https://linkedin.com{href}")
                 }
             })?;
 
@@ -106,7 +106,7 @@ impl LinkedInClient {
                 if href.starts_with("http") {
                     href.to_string()
                 } else {
-                    format!("https://linkedin.com{}", href)
+                    format!("https://linkedin.com{href}")
                 }
             });
 

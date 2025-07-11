@@ -1,7 +1,6 @@
 use crate::cli::{Commands, OutputFormat};
 use crate::{LinkedInClient, Result};
 use in_scraper::models::{Person, Company, Job};
-use serde_json;
 use std::fs;
 use std::io::{self, Write};
 use tabled::{Table, Tabled};
@@ -15,13 +14,13 @@ pub async fn execute_command(
 ) -> Result<()> {
     let result = match command {
         Commands::Person { url, .. } => {
-            if verbose { eprintln!("Scraping person profile: {}", url); }
+            if verbose { eprintln!("Scraping person profile: {url}"); }
             let person = client.scrape_person(&url).await?;
             format_person_output(person, format)
         }
         Commands::People { query, location, details, .. } => {
             if verbose { 
-                eprintln!("Searching people for: {} in {:?}", query, location); 
+                eprintln!("Searching people for: {query} in {location:?}"); 
             }
             let people = client.search_people(&query, location.as_deref()).await?;
             
@@ -32,7 +31,7 @@ pub async fn execute_command(
                     match client.scrape_person(&person.linkedin_url).await {
                         Ok(detailed_person) => detailed_people.push(detailed_person),
                         Err(e) => {
-                            if verbose { eprintln!("Failed to get details for person: {}", e); }
+                            if verbose { eprintln!("Failed to get details for person: {e}"); }
                             detailed_people.push(person.clone());
                         }
                     }
@@ -43,7 +42,7 @@ pub async fn execute_command(
             }
         }
         Commands::Company { url, employees, .. } => {
-            if verbose { eprintln!("Scraping company page: {}", url); }
+            if verbose { eprintln!("Scraping company page: {url}"); }
             let mut company = client.scrape_company(&url).await?;
             
             if employees {
@@ -55,7 +54,7 @@ pub async fn execute_command(
         }
         Commands::Jobs { query, location, details, .. } => {
             if verbose { 
-                eprintln!("Searching jobs for: {} in {:?}", query, location); 
+                eprintln!("Searching jobs for: {query} in {location:?}"); 
             }
             let jobs = client.search_jobs(&query, location.as_deref()).await?;
             
@@ -66,7 +65,7 @@ pub async fn execute_command(
                     match client.scrape_job(&job.linkedin_url).await {
                         Ok(detailed_job) => detailed_jobs.push(detailed_job),
                         Err(e) => {
-                            if verbose { eprintln!("Failed to get details for job: {}", e); }
+                            if verbose { eprintln!("Failed to get details for job: {e}"); }
                             detailed_jobs.push(job.clone());
                         }
                     }
@@ -77,7 +76,7 @@ pub async fn execute_command(
             }
         }
         Commands::Job { url, .. } => {
-            if verbose { eprintln!("Scraping job posting: {}", url); }
+            if verbose { eprintln!("Scraping job posting: {url}"); }
             let job = client.scrape_job(&url).await?;
             format_job_output(job, format)
         }
@@ -136,15 +135,15 @@ fn format_person_summary(person: Person) -> String {
     let mut output = String::new();
     
     if let Some(name) = &person.name {
-        output.push_str(&format!("Name: {}\n", name));
+        output.push_str(&format!("Name: {name}\n"));
     }
     
     if let Some(headline) = &person.headline {
-        output.push_str(&format!("Headline: {}\n", headline));
+        output.push_str(&format!("Headline: {headline}\n"));
     }
     
     if let Some(location) = &person.location {
-        output.push_str(&format!("Location: {}\n", location));
+        output.push_str(&format!("Location: {location}\n"));
     }
     
     if person.open_to_work {
@@ -189,23 +188,23 @@ fn format_company_summary(company: Company) -> String {
     let mut output = String::new();
     
     if let Some(name) = &company.name {
-        output.push_str(&format!("Company: {}\n", name));
+        output.push_str(&format!("Company: {name}\n"));
     }
     
     if let Some(industry) = &company.industry {
-        output.push_str(&format!("Industry: {}\n", industry));
+        output.push_str(&format!("Industry: {industry}\n"));
     }
     
     if let Some(size) = &company.company_size {
-        output.push_str(&format!("Size: {}\n", size));
+        output.push_str(&format!("Size: {size}\n"));
     }
     
     if let Some(founded) = company.founded {
-        output.push_str(&format!("Founded: {}\n", founded));
+        output.push_str(&format!("Founded: {founded}\n"));
     }
     
     if let Some(headquarters) = &company.headquarters {
-        output.push_str(&format!("Headquarters: {}\n", headquarters));
+        output.push_str(&format!("Headquarters: {headquarters}\n"));
     }
     
     if !company.employees.is_empty() {
@@ -251,35 +250,35 @@ fn format_job_summary(job: Job) -> String {
     let mut output = String::new();
     
     if let Some(title) = &job.title {
-        output.push_str(&format!("Title: {}\n", title));
+        output.push_str(&format!("Title: {title}\n"));
     }
     
     if let Some(company) = &job.company {
-        output.push_str(&format!("Company: {}\n", company));
+        output.push_str(&format!("Company: {company}\n"));
     }
     
     if let Some(location) = &job.location {
-        output.push_str(&format!("Location: {}\n", location));
+        output.push_str(&format!("Location: {location}\n"));
     }
     
     if let Some(employment_type) = &job.employment_type {
-        output.push_str(&format!("Type: {}\n", employment_type));
+        output.push_str(&format!("Type: {employment_type}\n"));
     }
     
     if let Some(seniority_level) = &job.seniority_level {
-        output.push_str(&format!("Level: {}\n", seniority_level));
+        output.push_str(&format!("Level: {seniority_level}\n"));
     }
     
     if let Some(posted_date) = &job.posted_date {
-        output.push_str(&format!("Posted: {}\n", posted_date));
+        output.push_str(&format!("Posted: {posted_date}\n"));
     }
     
     if let Some(applicant_count) = job.applicant_count {
-        output.push_str(&format!("Applicants: {}\n", applicant_count));
+        output.push_str(&format!("Applicants: {applicant_count}\n"));
     }
     
     if let Some(description) = &job.description {
-        output.push_str(&format!("\nDescription:\n{}\n", description));
+        output.push_str(&format!("\nDescription:\n{description}\n"));
     }
     
     output.push_str(&format!("\nURL: {}\n", job.linkedin_url));
@@ -418,7 +417,7 @@ fn write_output(content: String, output_file: Option<String>) -> io::Result<()> 
             fs::write(filename, content)?;
         }
         None => {
-            print!("{}", content);
+            print!("{content}");
             io::stdout().flush()?;
         }
     }

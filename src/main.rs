@@ -48,14 +48,14 @@ async fn main() -> Result<()> {
                 }
                 in_scraper::LinkedInError::Unknown(msg) if msg.contains("challenge") => {
                     eprintln!("LinkedIn security challenge detected.");
-                    eprintln!("{}", msg);
+                    eprintln!("{msg}");
                     eprintln!("\nRun './linkedin_auth_guide.sh' for detailed troubleshooting steps.");
                 }
                 in_scraper::LinkedInError::RateLimited => {
                     eprintln!("Rate limited by LinkedIn. Please wait and try again later.");
                 }
                 _ => {
-                    eprintln!("Failed to login to LinkedIn: {}", e);
+                    eprintln!("Failed to login to LinkedIn: {e}");
                     eprintln!("Please check your credentials and network connection.");
                     eprintln!("Run './linkedin_auth_guide.sh' for troubleshooting help.");
                 }
@@ -110,24 +110,24 @@ fn get_credential(
         return Ok(cred);
     }
 
-    print!("{}: ", prompt);
+    print!("{prompt}: ");
     io::stdout().flush().unwrap();
 
     let credential = if is_password {
         read_password().map_err(|e| {
-            in_scraper::LinkedInError::Unknown(format!("Failed to read password: {}", e))
+            in_scraper::LinkedInError::Unknown(format!("Failed to read password: {e}"))
         })?
     } else {
         let mut input = String::new();
         io::stdin().read_line(&mut input).map_err(|e| {
-            in_scraper::LinkedInError::Unknown(format!("Failed to read input: {}", e))
+            in_scraper::LinkedInError::Unknown(format!("Failed to read input: {e}"))
         })?;
         input.trim().to_string()
     };
 
     if credential.is_empty() {
         return Err(in_scraper::LinkedInError::Unknown(
-            format!("{} cannot be empty", prompt)
+            format!("{prompt} cannot be empty")
         ));
     }
 
