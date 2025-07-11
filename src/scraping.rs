@@ -101,12 +101,16 @@ impl LinkedInClient {
     fn extract_experiences(&self, document: &Html) -> Result<Vec<Experience>> {
         let mut experiences = Vec::new();
 
-        let experience_section_selector = self.make_selector(
+        let experience_section_selector = self.select_working_selector(
+            document,
             selectors::person::EXPERIENCE_SECTION
         )?;
 
         if let Some(experience_section) = document.select(&experience_section_selector).next() {
-            let item_selector = self.make_selector(selectors::person::EXPERIENCE_ITEMS)?;
+            let item_selector = self.select_working_selector_for_element(
+                &experience_section,
+                selectors::person::EXPERIENCE_ITEMS
+            )?;
 
             for item in experience_section.select(&item_selector) {
                 if let Some(experience) = self.parse_experience_item(&item) {
@@ -119,12 +123,20 @@ impl LinkedInClient {
     }
 
     fn parse_experience_item(&self, item: &scraper::ElementRef) -> Option<Experience> {
-        let title_selector = self.make_selector(selectors::person::EXPERIENCE_TITLES).ok()?;
-        let company_selector = self.make_selector(selectors::person::EXPERIENCE_COMPANIES).ok()?;
-        let duration_selector = self.make_selector(selectors::person::EXPERIENCE_INFO).ok()?;
-        let location_selector = self.make_selector(selectors::person::EXPERIENCE_INFO).ok()?;
+        let title_selector = self
+            .select_working_selector_for_element(item, selectors::person::EXPERIENCE_TITLES)
+            .ok()?;
+        let company_selector = self
+            .select_working_selector_for_element(item, selectors::person::EXPERIENCE_COMPANIES)
+            .ok()?;
+        let duration_selector = self
+            .select_working_selector_for_element(item, selectors::person::EXPERIENCE_INFO)
+            .ok()?;
+        let location_selector = self
+            .select_working_selector_for_element(item, selectors::person::EXPERIENCE_INFO)
+            .ok()?;
         let company_link_selector = self
-            .make_selector(selectors::person::EXPERIENCE_COMPANY_LINKS)
+            .select_working_selector_for_element(item, selectors::person::EXPERIENCE_COMPANY_LINKS)
             .ok()?;
 
         let title = item
@@ -178,10 +190,16 @@ impl LinkedInClient {
     fn extract_educations(&self, document: &Html) -> Result<Vec<Education>> {
         let mut educations = Vec::new();
 
-        let education_section_selector = self.make_selector(selectors::person::EDUCATION_SECTION)?;
+        let education_section_selector = self.select_working_selector(
+            document,
+            selectors::person::EDUCATION_SECTION
+        )?;
 
         if let Some(education_section) = document.select(&education_section_selector).next() {
-            let item_selector = self.make_selector(selectors::person::EDUCATION_ITEMS)?;
+            let item_selector = self.select_working_selector_for_element(
+                &education_section,
+                selectors::person::EDUCATION_ITEMS
+            )?;
 
             for item in education_section.select(&item_selector) {
                 if let Some(education) = self.parse_education_item(&item) {
@@ -194,11 +212,17 @@ impl LinkedInClient {
     }
 
     fn parse_education_item(&self, item: &scraper::ElementRef) -> Option<Education> {
-        let school_selector = self.make_selector(selectors::person::EDUCATION_SCHOOLS).ok()?;
-        let degree_selector = self.make_selector(selectors::person::EDUCATION_DEGREES).ok()?;
-        let duration_selector = self.make_selector(selectors::person::EDUCATION_DURATIONS).ok()?;
+        let school_selector = self
+            .select_working_selector_for_element(item, selectors::person::EDUCATION_SCHOOLS)
+            .ok()?;
+        let degree_selector = self
+            .select_working_selector_for_element(item, selectors::person::EDUCATION_DEGREES)
+            .ok()?;
+        let duration_selector = self
+            .select_working_selector_for_element(item, selectors::person::EDUCATION_DURATIONS)
+            .ok()?;
         let school_link_selector = self
-            .make_selector(selectors::person::EDUCATION_SCHOOL_LINKS)
+            .select_working_selector_for_element(item, selectors::person::EDUCATION_SCHOOL_LINKS)
             .ok()?;
 
         let school = item
@@ -336,7 +360,9 @@ impl LinkedInClient {
             .select_working_selector_for_element(card, selectors::job::SEARCH_COMPANIES)
             .ok()?;
 
-        let location_selector = self.make_selector(selectors::job::SEARCH_LOCATIONS).ok()?;
+        let location_selector = self
+            .select_working_selector_for_element(card, selectors::job::SEARCH_LOCATIONS)
+            .ok()?;
 
         let posted_date_selector = self
             .select_working_selector_for_element(card, selectors::job::SEARCH_POSTED_DATES)
@@ -371,7 +397,9 @@ impl LinkedInClient {
             .next()
             .map(|el| el.text().collect::<String>().trim().to_string());
 
-        let company_link_selector = self.make_selector(selectors::job::SEARCH_COMPANY_LINKS).ok()?;
+        let company_link_selector = self
+            .select_working_selector_for_element(card, selectors::job::SEARCH_COMPANY_LINKS)
+            .ok()?;
         let company_linkedin_url = card
             .select(&company_link_selector)
             .next()
@@ -502,7 +530,9 @@ impl LinkedInClient {
             .select_working_selector_for_element(item, selectors::company::EMPLOYEE_TITLES)
             .ok()?;
 
-        let link_selector = self.make_selector(selectors::company::EMPLOYEE_LINKS).ok()?;
+        let link_selector = self
+            .select_working_selector_for_element(item, selectors::company::EMPLOYEE_LINKS)
+            .ok()?;
 
         let name = item
             .select(&name_selector)

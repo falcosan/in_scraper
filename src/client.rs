@@ -52,11 +52,10 @@ impl LinkedInClient {
         let response = client.client.get(&login_url).send().await?;
         let html = response.text().await?;
         let document = Html::parse_document(&html);
-
-        let email_selector = Selector::parse(selectors::auth::EMAIL_INPUT).map_err(|e|
+        let email_selector = Selector::parse(selectors::auth::EMAIL_INPUT[0]).map_err(|e|
             LinkedInError::ParseError(e.to_string())
         )?;
-        let csrf_selector = Selector::parse(selectors::auth::CSRF_TOKEN).map_err(|e|
+        let csrf_selector = Selector::parse(selectors::auth::CSRF_TOKEN[0]).map_err(|e|
             LinkedInError::ParseError(e.to_string())
         )?;
 
@@ -181,8 +180,17 @@ impl LinkedInClient {
         Ok(Html::parse_document(&html))
     }
 
-    pub fn extract_text_by_selector(&self, document: &Html, selector_str: &str) -> Option<String> {
-        let selector = Selector::parse(selector_str).ok()?;
+    pub fn extract_text_by_selector(
+        &self,
+        document: &Html,
+        selector_strs: &[&str]
+    ) -> Option<String> {
+        let selector = match self.select_working_selector(document, selector_strs) {
+            Ok(s) => s,
+            Err(_) => {
+                return None;
+            }
+        };
         document
             .select(&selector)
             .next()
@@ -193,12 +201,11 @@ impl LinkedInClient {
     pub fn extract_multiple_text_by_selector(
         &self,
         document: &Html,
-        selector_str: &str
+        selector_strs: &[&str]
     ) -> Vec<String> {
-        let selector = Selector::parse(selector_str).unwrap_or_else(|_| {
-            panic!("Invalid selector: {selector_str}")
-        });
-
+        let selector = self
+            .select_working_selector(document, selector_strs)
+            .unwrap_or_else(|_| panic!("Invalid selector: {selector_strs:?}"));
         document
             .select(&selector)
             .map(|element| element.text().collect::<Vec<_>>().join(" ").trim().to_string())
@@ -209,10 +216,15 @@ impl LinkedInClient {
     pub fn extract_attribute_by_selector(
         &self,
         document: &Html,
-        selector_str: &str,
+        selector_strs: &[&str],
         attribute: &str
     ) -> Option<String> {
-        let selector = Selector::parse(selector_str).ok()?;
+        let selector = match self.select_working_selector(document, selector_strs) {
+            Ok(s) => s,
+            Err(_) => {
+                return None;
+            }
+        };
         document
             .select(&selector)
             .next()
