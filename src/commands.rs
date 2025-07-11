@@ -14,12 +14,12 @@ pub async fn execute_command(
     verbose: bool,
 ) -> Result<()> {
     let result = match command {
-        Commands::Person { url } => {
+        Commands::Person { url, .. } => {
             if verbose { eprintln!("Scraping person profile: {}", url); }
             let person = client.scrape_person(&url).await?;
             format_person_output(person, format)
         }
-        Commands::People { query, location, details } => {
+        Commands::People { query, location, details, .. } => {
             if verbose { 
                 eprintln!("Searching people for: {} in {:?}", query, location); 
             }
@@ -42,7 +42,7 @@ pub async fn execute_command(
                 format_people_output(people, format)
             }
         }
-        Commands::Company { url, employees } => {
+        Commands::Company { url, employees, .. } => {
             if verbose { eprintln!("Scraping company page: {}", url); }
             let mut company = client.scrape_company(&url).await?;
             
@@ -53,7 +53,7 @@ pub async fn execute_command(
             
             format_company_output(company, format)
         }
-        Commands::Jobs { query, location, details } => {
+        Commands::Jobs { query, location, details, .. } => {
             if verbose { 
                 eprintln!("Searching jobs for: {} in {:?}", query, location); 
             }
@@ -76,7 +76,7 @@ pub async fn execute_command(
                 format_jobs_output(jobs, format)
             }
         }
-        Commands::Job { url } => {
+        Commands::Job { url, .. } => {
             if verbose { eprintln!("Scraping job posting: {}", url); }
             let job = client.scrape_job(&url).await?;
             format_job_output(job, format)

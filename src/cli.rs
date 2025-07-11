@@ -28,6 +28,12 @@ pub struct Cli {
 pub enum Commands {
     Person {
         url: String,
+        #[arg(short = 'f', long, default_value = "json")]
+        format: Option<OutputFormat>,
+        #[arg(short, long)]
+        output: Option<String>,
+        #[arg(short, long)]
+        verbose: bool,
     },
     People {
         query: String,
@@ -35,11 +41,23 @@ pub enum Commands {
         location: Option<String>,
         #[arg(long, default_value = "0")]
         details: usize,
+        #[arg(short = 'f', long, default_value = "json")]
+        format: Option<OutputFormat>,
+        #[arg(short, long)]
+        output: Option<String>,
+        #[arg(short, long)]
+        verbose: bool,
     },
     Company {
         url: String,
         #[arg(long)]
         employees: bool,
+        #[arg(short = 'f', long, default_value = "json")]
+        format: Option<OutputFormat>,
+        #[arg(short, long)]
+        output: Option<String>,
+        #[arg(short, long)]
+        verbose: bool,
     },
     Jobs {
         query: String,
@@ -47,9 +65,21 @@ pub enum Commands {
         location: Option<String>,
         #[arg(long, default_value = "0")]
         details: usize,
+        #[arg(short = 'f', long, default_value = "json")]
+        format: Option<OutputFormat>,
+        #[arg(short, long)]
+        output: Option<String>,
+        #[arg(short, long)]
+        verbose: bool,
     },
     Job {
         url: String,
+        #[arg(short = 'f', long, default_value = "json")]
+        format: Option<OutputFormat>,
+        #[arg(short, long)]
+        output: Option<String>,
+        #[arg(short, long)]
+        verbose: bool,
     },
 }
 

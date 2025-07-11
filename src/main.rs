@@ -6,14 +6,16 @@ use std::io::{self, Write};
 mod cli;
 mod commands;
 
-use cli::Cli;
+use cli::{Cli, OutputFormat};
 use commands::execute_command;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Cli::parse();
 
-    if args.verbose {
+    let (format, output, verbose) = get_command_options(&args);
+
+    if verbose {
         eprintln!("in_scraper v{}", env!("CARGO_PKG_VERSION"));
     }
 
@@ -31,7 +33,7 @@ async fn main() -> Result<()> {
         true,
     )?;
 
-    if args.verbose {
+    if verbose {
         eprintln!("Logging into LinkedIn...");
     }
 
@@ -59,13 +61,37 @@ async fn main() -> Result<()> {
             e
         })?;
 
-    if args.verbose {
+    if verbose {
         eprintln!("Successfully logged in!");
     }
 
-    execute_command(&client, args.command, args.format, args.output, args.verbose).await?;
+    execute_command(&client, args.command, format, output, verbose).await?;
 
     Ok(())
+}
+
+fn get_command_options(args: &Cli) -> (OutputFormat, Option<String>, bool) {
+    let global_format = args.format.clone();
+    let global_output = args.output.clone();
+    let global_verbose = args.verbose;
+
+    match &args.command {
+        cli::Commands::Person { format, output, verbose, .. } => {
+            (format.clone().unwrap_or(global_format), output.clone().or(global_output), *verbose || global_verbose)
+        }
+        cli::Commands::People { format, output, verbose, .. } => {
+            (format.clone().unwrap_or(global_format), output.clone().or(global_output), *verbose || global_verbose)
+        }
+        cli::Commands::Company { format, output, verbose, .. } => {
+            (format.clone().unwrap_or(global_format), output.clone().or(global_output), *verbose || global_verbose)
+        }
+        cli::Commands::Jobs { format, output, verbose, .. } => {
+            (format.clone().unwrap_or(global_format), output.clone().or(global_output), *verbose || global_verbose)
+        }
+        cli::Commands::Job { format, output, verbose, .. } => {
+            (format.clone().unwrap_or(global_format), output.clone().or(global_output), *verbose || global_verbose)
+        }
+    }
 }
 
 fn get_credential(

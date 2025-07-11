@@ -217,6 +217,23 @@ in_scraper <command>
 # LinkedIn Password: ********
 ```
 
+### Global Options
+
+The CLI supports global options that can be used with any command:
+
+```bash
+# Global format option
+in_scraper --format pretty person "https://linkedin.com/in/someone"
+
+# Global output and verbose options
+in_scraper --output results.json --verbose people "Software Engineer"
+
+# Combine global and command-specific options
+in_scraper --format json person "https://linkedin.com/in/someone" --output person.json
+```
+
+**Note**: You can also use these options directly with subcommands (as shown in the examples below), which is often more convenient.
+
 ### CLI Commands
 
 #### 1. Person Profile Scraping

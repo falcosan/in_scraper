@@ -1,14 +1,8 @@
 /target
 /Cargo.lock
-**/*.rs.bk
 
 *.swp
 *.DS_Store
 .vscode/
 .env
-*.json
 *.log
-
-creds.json
-credentials.json
-*.credentials
