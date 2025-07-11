@@ -1,9 +1,8 @@
-use crate::error::{LinkedInError, Result};
-use crate::selectors;
 use reqwest::Client;
+use crate::selectors;
 use scraper::{Html, Selector};
 use std::collections::HashMap;
-
+use crate::error::{LinkedInError, Result};
 
 pub struct LinkedInClient {
     client: Client,

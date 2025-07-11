@@ -1,7 +1,7 @@
 use clap::Parser;
-use in_scraper::{LinkedInClient, Result};
-use rpassword::read_password;
 use std::io::{self, Write};
+use rpassword::read_password;
+use in_scraper::{LinkedInClient, Result};
 
 mod cli;
 mod commands;

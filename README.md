@@ -1,4 +1,4 @@
-# LinkedIn Scraper (Rust)
+# LinkedIn Scraper
 
 A fast and efficient LinkedIn scraper written in Rust with a comprehensive command-line interface.
 

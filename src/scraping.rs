@@ -1,9 +1,9 @@
-use crate::client::LinkedInClient;
-use crate::error::Result;
-use crate::models::{Person, Experience, Education, Job, Company, Employee};
-use crate::selectors;
-use scraper::Html;
 use regex::Regex;
+use scraper::Html;
+use crate::selectors;
+use crate::error::Result;
+use crate::client::LinkedInClient;
+use crate::models::{Person, Experience, Education, Job, Company, Employee};
 
 impl LinkedInClient {
     pub async fn scrape_person(&self, linkedin_url: &str) -> Result<Person> {

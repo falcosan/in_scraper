@@ -1,9 +1,9 @@
-use crate::cli::{Commands, OutputFormat};
-use crate::{LinkedInClient, Result};
-use in_scraper::models::{Person, Company, Job};
 use std::fs;
 use std::io::{self, Write};
 use tabled::{Table, Tabled};
+use crate::{LinkedInClient, Result};
+use crate::cli::{Commands, OutputFormat};
+use in_scraper::models::{Person, Company, Job};
 
 pub async fn execute_command(
     client: &LinkedInClient,
