@@ -17,6 +17,9 @@ thiserror = "1.0"
 anyhow = "1.0"
 regex = "1.10"
 urlencoding = "2.1"
+clap = { version = "4.4", features = ["derive", "env"] }
+tabled = "0.15"
+rpassword = "7.3"
 
 [dev-dependencies]
 tokio-test = "0.4"
@@ -31,4 +34,8 @@ path = "examples/scrape_company.rs"
 
 [[example]]
 name = "search_jobs"
-path = "examples/search_jobs.rs" 
+path = "examples/search_jobs.rs"
+
+[[bin]]
+name = "in_scraper"
+path = "src/main.rs" 

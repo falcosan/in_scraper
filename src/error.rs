@@ -10,6 +10,9 @@ pub enum LinkedInError {
     #[error("JSON error: {0}")]
     Json(#[from] serde_json::Error),
     
+    #[error("IO error: {0}")]
+    Io(#[from] std::io::Error),
+    
     #[error("Authentication failed")]
     AuthenticationFailed,
     

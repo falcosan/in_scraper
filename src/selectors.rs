@@ -6,6 +6,11 @@ pub mod person {
     pub const EXPERIENCE_SECTION: &str = "#experience ~ .pvs-list__container";
     pub const EDUCATION_SECTION: &str = "#education ~ .pvs-list__container";
     pub const OPEN_TO_WORK: &str = ".pv-top-card-profile-picture img[title*='OPEN_TO_WORK']";
+    pub const SEARCH_RESULT_CARD: &str = ".search-result__wrapper";
+    pub const SEARCH_RESULT_TITLE: &str = ".search-result__result-link";
+    pub const SEARCH_RESULT_HEADLINE: &str = ".subline-level-1";
+    pub const SEARCH_RESULT_LOCATION: &str = ".subline-level-2";
+    pub const SEARCH_RESULT_SUMMARY: &str = ".search-result__snippets";
 }
 
 pub mod company {

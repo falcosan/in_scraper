@@ -26,6 +26,76 @@ impl LinkedInClient {
         Ok(person)
     }
 
+    pub async fn search_people(&self, query: &str, location: Option<&str>) -> Result<Vec<Person>> {
+        let mut search_url = format!(
+            "https://www.linkedin.com/search/results/people/?keywords={}",
+            urlencoding::encode(query)
+        );
+
+        if let Some(loc) = location {
+            search_url.push_str(&format!("&geoUrn={}", urlencoding::encode(loc)));
+        }
+
+        let document = self.get_html(&search_url).await?;
+        self.extract_people_listings(&document)
+    }
+
+    fn extract_people_listings(&self, document: &Html) -> Result<Vec<Person>> {
+        let mut people = Vec::new();
+        
+        let person_card_selector = Selector::parse(selectors::person::SEARCH_RESULT_CARD)
+            .or_else(|_| Selector::parse(".search-result"))
+            .or_else(|_| Selector::parse(".reusable-search__result-container"))
+            .map_err(|e| LinkedInError::ParseError(e.to_string()))?;
+        
+        for person_card in document.select(&person_card_selector) {
+            if let Some(person) = self.parse_person_card(&person_card) {
+                people.push(person);
+            }
+        }
+
+        Ok(people)
+    }
+
+    fn parse_person_card(&self, card: &scraper::ElementRef) -> Option<Person> {
+        let title_selector = Selector::parse(selectors::person::SEARCH_RESULT_TITLE).ok()
+            .or_else(|| Selector::parse(".app-aware-link").ok())
+            .or_else(|| Selector::parse("a[href*='/in/']").ok())?;
+        
+        let headline_selector = Selector::parse(selectors::person::SEARCH_RESULT_HEADLINE).ok()
+            .or_else(|| Selector::parse(".entity-result__primary-subtitle").ok())?;
+        
+        let location_selector = Selector::parse(selectors::person::SEARCH_RESULT_LOCATION).ok()
+            .or_else(|| Selector::parse(".entity-result__secondary-subtitle").ok())?;
+
+        let title_element = card.select(&title_selector).next()?;
+        let name = title_element.text().collect::<String>().trim().to_string();
+        
+        let linkedin_url = title_element.value().attr("href")
+            .map(|href| {
+                if href.starts_with("http") {
+                    href.to_string()
+                } else {
+                    format!("https://linkedin.com{}", href)
+                }
+            })?;
+
+        let headline = card.select(&headline_selector)
+            .next()
+            .map(|el| el.text().collect::<String>().trim().to_string());
+
+        let location = card.select(&location_selector)
+            .next()
+            .map(|el| el.text().collect::<String>().trim().to_string());
+
+        let mut person = Person::new(linkedin_url);
+        person.name = Some(name);
+        person.headline = headline;
+        person.location = location;
+
+        Some(person)
+    }
+
     fn extract_experiences(&self, document: &Html) -> Result<Vec<Experience>> {
         let mut experiences = Vec::new();
         
