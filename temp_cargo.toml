@@ -1,3 +1,0 @@
-[[bin]]
-name = "debug_login"
-path = "debug_login.rs"
