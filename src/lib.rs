@@ -1,8 +1,6 @@
 pub mod client;
 pub mod models;
-pub mod person;
-pub mod company;
-pub mod job;
+pub mod scraping;
 pub mod error;
 pub mod selectors;
 

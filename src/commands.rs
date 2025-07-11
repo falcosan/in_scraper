@@ -16,7 +16,7 @@ pub async fn execute_command(
         Commands::Person { url, .. } => {
             if verbose { eprintln!("Scraping person profile: {url}"); }
             let person = client.scrape_person(&url).await?;
-            format_person_output(person, format)
+            format_output(&person, format)
         }
         Commands::People { query, location, details, .. } => {
             if verbose { 
@@ -36,9 +36,9 @@ pub async fn execute_command(
                         }
                     }
                 }
-                format_people_output(detailed_people, format)
+                format_output(&detailed_people, format)
             } else {
-                format_people_output(people, format)
+                format_output(&people, format)
             }
         }
         Commands::Company { url, employees, .. } => {
@@ -50,7 +50,7 @@ pub async fn execute_command(
                 company.employees = client.scrape_company_employees(&url).await?;
             }
             
-            format_company_output(company, format)
+            format_output(&company, format)
         }
         Commands::Jobs { query, location, details, .. } => {
             if verbose { 
@@ -70,15 +70,15 @@ pub async fn execute_command(
                         }
                     }
                 }
-                format_jobs_output(detailed_jobs, format)
+                format_output(&detailed_jobs, format)
             } else {
-                format_jobs_output(jobs, format)
+                format_output(&jobs, format)
             }
         }
         Commands::Job { url, .. } => {
             if verbose { eprintln!("Scraping job posting: {url}"); }
             let job = client.scrape_job(&url).await?;
-            format_job_output(job, format)
+            format_output(&job, format)
         }
     };
 
@@ -86,52 +86,7 @@ pub async fn execute_command(
     Ok(())
 }
 
-fn format_person_output(person: Person, format: OutputFormat) -> String {
-    match format {
-        OutputFormat::Json => serde_json::to_string(&person).unwrap_or_default(),
-        OutputFormat::Pretty => serde_json::to_string_pretty(&person).unwrap_or_default(),
-        OutputFormat::Summary => format_person_summary(person),
-        OutputFormat::Table => format_person_table(person),
-    }
-}
-
-fn format_company_output(company: Company, format: OutputFormat) -> String {
-    match format {
-        OutputFormat::Json => serde_json::to_string(&company).unwrap_or_default(),
-        OutputFormat::Pretty => serde_json::to_string_pretty(&company).unwrap_or_default(),
-        OutputFormat::Summary => format_company_summary(company),
-        OutputFormat::Table => format_company_table(company),
-    }
-}
-
-fn format_jobs_output(jobs: Vec<Job>, format: OutputFormat) -> String {
-    match format {
-        OutputFormat::Json => serde_json::to_string(&jobs).unwrap_or_default(),
-        OutputFormat::Pretty => serde_json::to_string_pretty(&jobs).unwrap_or_default(),
-        OutputFormat::Summary => format_jobs_summary(&jobs),
-        OutputFormat::Table => format_jobs_table(jobs),
-    }
-}
-
-fn format_job_output(job: Job, format: OutputFormat) -> String {
-    match format {
-        OutputFormat::Json => serde_json::to_string(&job).unwrap_or_default(),
-        OutputFormat::Pretty => serde_json::to_string_pretty(&job).unwrap_or_default(),
-        OutputFormat::Summary => format_job_summary(job),
-        OutputFormat::Table => format_job_table(job),
-    }
-}
-
-fn format_people_output(people: Vec<Person>, format: OutputFormat) -> String {
-    match format {
-        OutputFormat::Json => serde_json::to_string(&people).unwrap_or_default(),
-        OutputFormat::Pretty => serde_json::to_string_pretty(&people).unwrap_or_default(),
-        OutputFormat::Summary => format_people_summary(&people),
-        OutputFormat::Table => format_people_table(people),
-    }
-}
-
-fn format_person_summary(person: Person) -> String {
+fn format_person_summary(person: &Person) -> String {
     let mut output = String::new();
     
     if let Some(name) = &person.name {
@@ -184,7 +139,7 @@ fn format_person_summary(person: Person) -> String {
     output
 }
 
-fn format_company_summary(company: Company) -> String {
+fn format_company_summary(company: &Company) -> String {
     let mut output = String::new();
     
     if let Some(name) = &company.name {
@@ -246,7 +201,7 @@ fn format_jobs_summary(jobs: &[Job]) -> String {
     output
 }
 
-fn format_job_summary(job: Job) -> String {
+fn format_job_summary(job: &Job) -> String {
     let mut output = String::new();
     
     if let Some(title) = &job.title {
@@ -317,11 +272,11 @@ struct PersonTableRow {
     educations: String,
 }
 
-fn format_person_table(person: Person) -> String {
+fn format_person_table(person: &Person) -> String {
     let row = PersonTableRow {
-        name: person.name.unwrap_or_default(),
-        headline: person.headline.unwrap_or_default(),
-        location: person.location.unwrap_or_default(),
+        name: person.name.clone().unwrap_or_default(),
+        headline: person.headline.clone().unwrap_or_default(),
+        location: person.location.clone().unwrap_or_default(),
         open_to_work: if person.open_to_work { "Yes".to_string() } else { "No".to_string() },
         experiences: person.experiences.len().to_string(),
         educations: person.educations.len().to_string(),
@@ -340,13 +295,13 @@ struct CompanyTableRow {
     employees: String,
 }
 
-fn format_company_table(company: Company) -> String {
+fn format_company_table(company: &Company) -> String {
     let row = CompanyTableRow {
-        name: company.name.unwrap_or_default(),
-        industry: company.industry.unwrap_or_default(),
-        size: company.company_size.unwrap_or_default(),
-        founded: company.founded.map_or_default(|f| f.to_string()),
-        headquarters: company.headquarters.unwrap_or_default(),
+        name: company.name.clone().unwrap_or_default(),
+        industry: company.industry.clone().unwrap_or_default(),
+        size: company.company_size.clone().unwrap_or_default(),
+        founded: company.founded.map_or(String::new(), |f| f.to_string()),
+        headquarters: company.headquarters.clone().unwrap_or_default(),
         employees: company.employees.len().to_string(),
     };
     
@@ -362,28 +317,28 @@ struct JobTableRow {
     applicants: String,
 }
 
-fn format_jobs_table(jobs: Vec<Job>) -> String {
+fn format_jobs_table(jobs: &[Job]) -> String {
     let rows: Vec<JobTableRow> = jobs
-        .into_iter()
+        .iter()
         .map(|job| JobTableRow {
-            title: job.title.unwrap_or_default(),
-            company: job.company.unwrap_or_default(),
-            location: job.location.unwrap_or_default(),
-            posted: job.posted_date.unwrap_or_default(),
-            applicants: job.applicant_count.map_or_default(|c| c.to_string()),
+            title: job.title.clone().unwrap_or_default(),
+            company: job.company.clone().unwrap_or_default(),
+            location: job.location.clone().unwrap_or_default(),
+            posted: job.posted_date.clone().unwrap_or_default(),
+            applicants: job.applicant_count.map_or(String::new(), |c| c.to_string()),
         })
         .collect();
     
     Table::new(rows).to_string()
 }
 
-fn format_job_table(job: Job) -> String {
+fn format_job_table(job: &Job) -> String {
     let row = JobTableRow {
-        title: job.title.unwrap_or_default(),
-        company: job.company.unwrap_or_default(),
-        location: job.location.unwrap_or_default(),
-        posted: job.posted_date.unwrap_or_default(),
-        applicants: job.applicant_count.map_or_default(|c| c.to_string()),
+        title: job.title.clone().unwrap_or_default(),
+        company: job.company.clone().unwrap_or_default(),
+        location: job.location.clone().unwrap_or_default(),
+        posted: job.posted_date.clone().unwrap_or_default(),
+        applicants: job.applicant_count.map_or(String::new(), |c| c.to_string()),
     };
     
     Table::new([row]).to_string()
@@ -397,14 +352,14 @@ struct PeopleTableRow {
     linkedin_url: String,
 }
 
-fn format_people_table(people: Vec<Person>) -> String {
+fn format_people_table(people: &[Person]) -> String {
     let rows: Vec<PeopleTableRow> = people
-        .into_iter()
+        .iter()
         .map(|person| PeopleTableRow {
-            name: person.name.unwrap_or_default(),
-            headline: person.headline.unwrap_or_default(),
-            location: person.location.unwrap_or_default(),
-            linkedin_url: person.linkedin_url,
+            name: person.name.clone().unwrap_or_default(),
+            headline: person.headline.clone().unwrap_or_default(),
+            location: person.location.clone().unwrap_or_default(),
+            linkedin_url: person.linkedin_url.clone(),
         })
         .collect();
     
@@ -436,5 +391,111 @@ impl<T> MapOrDefault<T> for Option<T> {
         F: FnOnce(T) -> String,
     {
         self.map(f).unwrap_or_default()
+    }
+}
+
+trait Formattable {
+    fn to_json(&self) -> String;
+    fn to_pretty_json(&self) -> String;
+    fn to_summary(&self) -> String;
+    fn to_table(&self) -> String;
+}
+
+fn format_output<T: Formattable>(item: &T, format: OutputFormat) -> String {
+    match format {
+        OutputFormat::Json => item.to_json(),
+        OutputFormat::Pretty => item.to_pretty_json(),
+        OutputFormat::Summary => item.to_summary(),
+        OutputFormat::Table => item.to_table(),
+    }
+}
+
+impl Formattable for Person {
+    fn to_json(&self) -> String {
+        serde_json::to_string(self).unwrap_or_default()
+    }
+
+    fn to_pretty_json(&self) -> String {
+        serde_json::to_string_pretty(self).unwrap_or_default()
+    }
+
+    fn to_summary(&self) -> String {
+        format_person_summary(self)
+    }
+
+    fn to_table(&self) -> String {
+        format_person_table(self)
+    }
+}
+
+impl Formattable for Company {
+    fn to_json(&self) -> String {
+        serde_json::to_string(self).unwrap_or_default()
+    }
+
+    fn to_pretty_json(&self) -> String {
+        serde_json::to_string_pretty(self).unwrap_or_default()
+    }
+
+    fn to_summary(&self) -> String {
+        format_company_summary(self)
+    }
+
+    fn to_table(&self) -> String {
+        format_company_table(self)
+    }
+}
+
+impl Formattable for Job {
+    fn to_json(&self) -> String {
+        serde_json::to_string(self).unwrap_or_default()
+    }
+
+    fn to_pretty_json(&self) -> String {
+        serde_json::to_string_pretty(self).unwrap_or_default()
+    }
+
+    fn to_summary(&self) -> String {
+        format_job_summary(self)
+    }
+
+    fn to_table(&self) -> String {
+        format_job_table(self)
+    }
+}
+
+impl Formattable for Vec<Job> {
+    fn to_json(&self) -> String {
+        serde_json::to_string(self).unwrap_or_default()
+    }
+
+    fn to_pretty_json(&self) -> String {
+        serde_json::to_string_pretty(self).unwrap_or_default()
+    }
+
+    fn to_summary(&self) -> String {
+        format_jobs_summary(self)
+    }
+
+    fn to_table(&self) -> String {
+        format_jobs_table(self)
+    }
+}
+
+impl Formattable for Vec<Person> {
+    fn to_json(&self) -> String {
+        serde_json::to_string(self).unwrap_or_default()
+    }
+
+    fn to_pretty_json(&self) -> String {
+        serde_json::to_string_pretty(self).unwrap_or_default()
+    }
+
+    fn to_summary(&self) -> String {
+        format_people_summary(self)
+    }
+
+    fn to_table(&self) -> String {
+        format_people_table(self)
     }
 } 

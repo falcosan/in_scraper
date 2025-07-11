@@ -236,6 +236,32 @@ impl LinkedInClient {
         
         Err(last_error)
     }
+
+    pub fn make_selector(&self, sel_str: &str) -> Result<Selector> {
+        Selector::parse(sel_str).map_err(|e| LinkedInError::ParseError(e.to_string()))
+    }
+
+    pub fn select_working_selector(&self, document: &Html, candidates: &[&str]) -> Result<Selector> {
+        for &sel_str in candidates {
+            if let Ok(sel) = Selector::parse(sel_str) {
+                if document.select(&sel).next().is_some() {
+                    return Ok(sel);
+                }
+            }
+        }
+        Err(LinkedInError::ElementNotFound(format!("No working selector found among {:?}", candidates)))
+    }
+
+    pub fn select_working_selector_for_element(&self, element: &scraper::ElementRef, candidates: &[&str]) -> Result<Selector> {
+        for &sel_str in candidates {
+            if let Ok(sel) = Selector::parse(sel_str) {
+                if element.select(&sel).next().is_some() {
+                    return Ok(sel);
+                }
+            }
+        }
+        Err(LinkedInError::ElementNotFound(format!("No working selector found among {:?} for element", candidates)))
+    }
 }
 
 impl Default for LinkedInClient {
