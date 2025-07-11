@@ -1,20 +1,18 @@
 use clap::Parser;
 use std::io::{ self, Write };
 use rpassword::read_password;
+use commands::execute_command;
+use cli::{ Cli, OutputFormat };
 use in_scraper::{ LinkedInClient, Result };
 
 mod cli;
 mod commands;
-
-use cli::{ Cli, OutputFormat };
-use commands::execute_command;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv::dotenv().ok();
 
     let args = Cli::parse();
-
     let (format, output, verbose) = get_command_options(&args);
 
     if verbose {
@@ -22,7 +20,6 @@ async fn main() -> Result<()> {
     }
 
     let email = get_credential(args.email, "LinkedIn Email", "LINKEDIN_EMAIL", false)?;
-
     let password = get_credential(args.password, "LinkedIn Password", "LINKEDIN_PASSWORD", true)?;
 
     if verbose {
@@ -35,18 +32,11 @@ async fn main() -> Result<()> {
                 eprintln!("Authentication failed. Please check your LinkedIn credentials.");
                 eprintln!("Make sure you can log in via web browser first.");
             }
-            in_scraper::LinkedInError::Unknown(msg) if msg.contains("challenge") => {
-                eprintln!("LinkedIn security challenge detected.");
-                eprintln!("{msg}");
-                eprintln!("\nRun './linkedin_auth_guide.sh' for detailed troubleshooting steps.");
-            }
             in_scraper::LinkedInError::RateLimited => {
                 eprintln!("Rate limited by LinkedIn. Please wait and try again later.");
             }
-            _ => {
-                eprintln!("Failed to login to LinkedIn: {e}");
-                eprintln!("Please check your credentials and network connection.");
-                eprintln!("Run './linkedin_auth_guide.sh' for troubleshooting help.");
+            msg => {
+                eprintln!("{msg}");
             }
         }
         e
