@@ -379,21 +379,6 @@ fn write_output(content: String, output_file: Option<String>) -> io::Result<()> 
     Ok(())
 }
 
-trait MapOrDefault<T> {
-    fn map_or_default<F>(self, f: F) -> String
-    where
-        F: FnOnce(T) -> String;
-}
-
-impl<T> MapOrDefault<T> for Option<T> {
-    fn map_or_default<F>(self, f: F) -> String
-    where
-        F: FnOnce(T) -> String,
-    {
-        self.map(f).unwrap_or_default()
-    }
-}
-
 trait Formattable {
     fn to_json(&self) -> String;
     fn to_pretty_json(&self) -> String;

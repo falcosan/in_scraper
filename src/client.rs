@@ -249,7 +249,7 @@ impl LinkedInClient {
                 }
             }
         }
-        Err(LinkedInError::ElementNotFound(format!("No working selector found among {:?}", candidates)))
+        Err(LinkedInError::ElementNotFound(format!("No working selector found among {candidates:?}")))
     }
 
     pub fn select_working_selector_for_element(&self, element: &scraper::ElementRef, candidates: &[&str]) -> Result<Selector> {
@@ -260,7 +260,7 @@ impl LinkedInClient {
                 }
             }
         }
-        Err(LinkedInError::ElementNotFound(format!("No working selector found among {:?} for element", candidates)))
+        Err(LinkedInError::ElementNotFound(format!("No working selector found among {candidates:?} for element")))
     }
 }
 

@@ -1,12 +1,11 @@
 use crate::client::LinkedInClient;
-use crate::error::{LinkedInError, Result};
+use crate::error::Result;
 use crate::models::{Person, Experience, Education, Job, Company, Employee};
 use crate::selectors;
-use scraper::{Html, Selector};
+use scraper::Html;
 use regex::Regex;
 
 impl LinkedInClient {
-    // Contents from person.rs
     pub async fn scrape_person(&self, linkedin_url: &str) -> Result<Person> {
         let mut person = Person::new(linkedin_url.to_string());
         let document = self.get_html(linkedin_url).await?;
@@ -123,7 +122,7 @@ impl LinkedInClient {
 
         let duration_text = item.select(&duration_selector)
             .next()
-            .map(|el| el.text().collect<String>().trim().to_string());
+            .map(|el| el.text().collect::<String>().trim().to_string());
 
         let (from_date, to_date, duration) = self.parse_duration(&duration_text.unwrap_or_default());
 
@@ -184,7 +183,7 @@ impl LinkedInClient {
 
         let degree = item.select(&degree_selector)
             .next()
-            .map(|el| el.text().collect()<String>().trim().to_string());
+            .map(|el| el.text().collect::<String>().trim().to_string());
 
         let duration_text = item.select(&duration_selector)
             .next()
@@ -232,7 +231,6 @@ impl LinkedInClient {
             (None, None, Some(duration_text.to_string()))
         }
     }
-    // Contents from job.rs
     pub async fn scrape_job(&self, linkedin_url: &str) -> Result<Job> {
         let mut job = Job::new(linkedin_url.to_string());
         let document = self.get_html(linkedin_url).await?;
@@ -377,7 +375,6 @@ impl LinkedInClient {
                 text.contains("Executive")
             })
     }
-    // Contents from company.rs
     pub async fn scrape_company(&self, linkedin_url: &str) -> Result<Company> {
         let mut company = Company::new(linkedin_url.to_string());
         let document = self.get_html(linkedin_url).await?;
