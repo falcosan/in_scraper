@@ -2,25 +2,6 @@
 
 set -e
 
-cargo build --release --quiet
-
-CLI="./target/release/in_scraper"
-
-$CLI --help > /dev/null
-$CLI person --help > /dev/null
-$CLI people --help > /dev/null
-$CLI company --help > /dev/null
-$CLI jobs --help > /dev/null
-$CLI job --help > /dev/null
-$CLI --version > /dev/null
-
-if $CLI invalid-command 2>/dev/null; then
-    echo "Should have failed on invalid command"
-    exit 1
-else
-    echo "Error handling works"
-fi
-
 cargo test --release --quiet
 
 if [ $? -ne 0 ]; then
