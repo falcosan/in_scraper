@@ -37,5 +37,6 @@ pub mod auth {
     pub const EMAIL_INPUT: &str = "#username";
     pub const PASSWORD_INPUT: &str = "#password";
     pub const LOGIN_BUTTON: &str = ".btn__primary--large";
+    pub const CSRF_TOKEN: &str = "input[name='loginCsrfParam']";
     pub const VERIFICATION_ELEMENT: &str = ".global-nav__primary-link";
 } 

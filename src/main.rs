@@ -35,10 +35,27 @@ async fn main() -> Result<()> {
         eprintln!("Logging into LinkedIn...");
     }
 
-    let client = LinkedInClient::login(&email, &password).await
+    let client = LinkedInClient::login_with_retry(&email, &password, 2).await
         .map_err(|e| {
-            eprintln!("Failed to login to LinkedIn: {}", e);
-            eprintln!("Please check your credentials and try again.");
+            match &e {
+                in_scraper::LinkedInError::AuthenticationFailed => {
+                    eprintln!("Authentication failed. Please check your LinkedIn credentials.");
+                    eprintln!("Make sure you can log in via web browser first.");
+                }
+                in_scraper::LinkedInError::Unknown(msg) if msg.contains("challenge") => {
+                    eprintln!("LinkedIn security challenge detected.");
+                    eprintln!("{}", msg);
+                    eprintln!("\nRun './linkedin_auth_guide.sh' for detailed troubleshooting steps.");
+                }
+                in_scraper::LinkedInError::RateLimited => {
+                    eprintln!("Rate limited by LinkedIn. Please wait and try again later.");
+                }
+                _ => {
+                    eprintln!("Failed to login to LinkedIn: {}", e);
+                    eprintln!("Please check your credentials and network connection.");
+                    eprintln!("Run './linkedin_auth_guide.sh' for troubleshooting help.");
+                }
+            }
             e
         })?;
 
