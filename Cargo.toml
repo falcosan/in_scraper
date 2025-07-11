@@ -6,36 +6,20 @@ description = "A fast and simple LinkedIn scraper written in Rust"
 license = "MIT"
 
 [dependencies]
-reqwest = { version = "0.11", features = ["json", "cookies"] }
-scraper = "0.18"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-tokio = { version = "1.0", features = ["full"] }
-url = "2.4"
-chrono = { version = "0.4", features = ["serde"] }
-thiserror = "1.0"
-anyhow = "1.0"
-regex = "1.10"
-urlencoding = "2.1"
-clap = { version = "4.4", features = ["derive"] }
-tabled = "0.15"
-rpassword = "7.3"
+url = "2.5"
+regex = "1.11"
 dotenv = "0.15"
-
-[dev-dependencies]
-tokio-test = "0.4"
-
-[[example]]
-name = "scrape_person"
-path = "examples/scrape_person.rs"
-
-[[example]]
-name = "scrape_company"
-path = "examples/scrape_company.rs"
-
-[[example]]
-name = "search_jobs"
-path = "examples/search_jobs.rs"
+tabled = "0.20"
+scraper = "0.23"
+rpassword = "7.4"
+thiserror = "2.0"
+serde_json = "1.0"
+urlencoding = "2.1"
+tokio = { version = "1.46", features = ["full"] }
+clap = { version = "4.5", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+reqwest = { version = "0.12", features = ["json", "cookies"] }
 
 [[bin]]
 name = "in_scraper"
