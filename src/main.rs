@@ -29,7 +29,7 @@ async fn main() -> Result<()> {
         eprintln!("Using li_at cookie for authentication...");
     }
 
-    let client = LinkedInClient::new_with_cookie(&li_at_cookie).map_err(|e| {
+    let client = LinkedInClient::new(&li_at_cookie).map_err(|e| {
         eprintln!("Failed to create client with li_at cookie: {e}");
         e
     })?;
@@ -49,40 +49,35 @@ fn get_command_options(args: &Cli) -> (OutputFormat, Option<String>, bool) {
     let global_verbose = args.verbose;
 
     match &args.command {
-        cli::Commands::Person { format, output, verbose, .. } => {
+        cli::Commands::Person { format, output, verbose, .. } =>
             (
                 format.clone().unwrap_or(global_format),
                 output.clone().or(global_output),
                 *verbose || global_verbose,
-            )
-        }
-        cli::Commands::People { format, output, verbose, .. } => {
+            ),
+        cli::Commands::People { format, output, verbose, .. } =>
             (
                 format.clone().unwrap_or(global_format),
                 output.clone().or(global_output),
                 *verbose || global_verbose,
-            )
-        }
-        cli::Commands::Company { format, output, verbose, .. } => {
+            ),
+        cli::Commands::Company { format, output, verbose, .. } =>
             (
                 format.clone().unwrap_or(global_format),
                 output.clone().or(global_output),
                 *verbose || global_verbose,
-            )
-        }
-        cli::Commands::Jobs { format, output, verbose, .. } => {
+            ),
+        cli::Commands::Jobs { format, output, verbose, .. } =>
             (
                 format.clone().unwrap_or(global_format),
                 output.clone().or(global_output),
                 *verbose || global_verbose,
-            )
-        }
-        cli::Commands::Job { format, output, verbose, .. } => {
+            ),
+        cli::Commands::Job { format, output, verbose, .. } =>
             (
                 format.clone().unwrap_or(global_format),
                 output.clone().or(global_output),
                 *verbose || global_verbose,
-            )
-        }
+            ),
     }
 }

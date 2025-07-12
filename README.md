@@ -31,7 +31,7 @@ use in_scraper::{LinkedInClient, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let client = LinkedInClient::new_with_cookie("your-li-at-cookie-value")?;
+    let client = LinkedInClient::new("your-li-at-cookie-value")?;
 
     let person = client.scrape_person("https://www.linkedin.com/in/example").await?;
     println!("Name: {:?}", person.name);

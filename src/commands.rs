@@ -3,7 +3,7 @@ use std::io::{ self, Write };
 use tabled::{ Table, Tabled };
 use crate::{ LinkedInClient, Result };
 use crate::cli::{ Commands, OutputFormat };
-use in_scraper::models::{ Person, Company, Job };
+use in_scraper::models::{ Job, Person, Company };
 
 pub async fn execute_command(
     client: &LinkedInClient,

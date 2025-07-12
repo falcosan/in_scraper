@@ -7,7 +7,7 @@ pub struct LinkedInClient {
 }
 
 impl LinkedInClient {
-    pub fn new_with_cookie(li_at_cookie: &str) -> Result<Self> {
+    pub fn new(li_at_cookie: &str) -> Result<Self> {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             "Accept",
@@ -42,9 +42,7 @@ impl LinkedInClient {
             .build()
             .map_err(|e| LinkedInError::Unknown(format!("Failed to create HTTP client: {e}")))?;
 
-        Ok(Self {
-            client,
-        })
+        Ok(Self { client })
     }
 
     pub async fn get_html(&self, url: &str) -> Result<Html> {
@@ -87,7 +85,7 @@ impl LinkedInClient {
         document
             .select(&selector)
             .next()
-            .map(|element| element.text().collect::<Vec<_>>().join(" ").trim().to_string())
+            .map(|element| { element.text().collect::<Vec<_>>().join(" ").trim().to_string() })
             .filter(|text| !text.is_empty())
     }
 
@@ -101,7 +99,7 @@ impl LinkedInClient {
             .unwrap_or_else(|_| panic!("Invalid selector: {selector_strs:?}"));
         document
             .select(&selector)
-            .map(|element| element.text().collect::<Vec<_>>().join(" ").trim().to_string())
+            .map(|element| { element.text().collect::<Vec<_>>().join(" ").trim().to_string() })
             .filter(|text| !text.is_empty())
             .collect()
     }

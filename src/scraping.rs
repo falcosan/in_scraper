@@ -3,7 +3,7 @@ use scraper::Html;
 use crate::selectors;
 use crate::error::Result;
 use crate::client::LinkedInClient;
-use crate::models::{ Person, Experience, Education, Job, Company, Employee };
+use crate::models::{ Company, Education, Employee, Experience, Job, Person };
 
 impl LinkedInClient {
     pub async fn scrape_person(&self, linkedin_url: &str) -> Result<Person> {
