@@ -35,9 +35,7 @@ async fn main() -> Result<()> {
             in_scraper::LinkedInError::RateLimited => {
                 eprintln!("Rate limited by LinkedIn. Please wait and try again later.");
             }
-            msg => {
-                eprintln!("{msg}");
-            }
+            _ => {}
         }
     })?;
 

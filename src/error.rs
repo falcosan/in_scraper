@@ -22,5 +22,5 @@ pub enum LinkedInError {
     #[error("Rate limited")]
     RateLimited,
 
-    #[error("Unknown error: {0}")] Unknown(String),
+    #[error("{0}")] Unknown(String),
 }

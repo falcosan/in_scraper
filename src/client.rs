@@ -92,6 +92,22 @@ impl LinkedInClient {
 
         let final_url = response.url().to_string();
 
+        if final_url.contains("/challenge") {
+            return Err(
+                LinkedInError::Unknown(
+                    "LinkedIn security challenge detected. This usually happens when:\n1. Logging in from a new location or device\n2. Unusual activity is detected\n3. Account needs verification\n\nSolutions:\n- Log in through a web browser first to complete any challenges\n- Wait some time before trying again\n- Use a residential IP address\n- Try from the same network/device you normally use".to_string()
+                )
+            );
+        }
+
+        if final_url.contains("/uas") {
+            return Err(
+                LinkedInError::Unknown(
+                    "LinkedIn account verification required. Please log in through a web browser first to verify your account.".to_string()
+                )
+            );
+        }
+
         if final_url.contains("/checkpoint") && !final_url.contains("/feed") {
             let response_text = response.text().await?;
             let doc = Html::parse_document(&response_text);
