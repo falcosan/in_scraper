@@ -41,10 +41,13 @@ impl LinkedInClient {
     fn extract_people_listings(&self, document: &Html) -> Result<Vec<Person>> {
         let mut people = Vec::new();
 
-        let person_card_selector = self.select_working_selector(
+        let person_card_selector = match self.select_working_selector(
             document,
             selectors::person::SEARCH_CARDS
-        )?;
+        ) {
+            Ok(selector) => selector,
+            Err(_) => return Ok(people),
+        };
 
         for person_card in document.select(&person_card_selector) {
             if let Some(person) = self.parse_person_card(&person_card) {
@@ -58,15 +61,16 @@ impl LinkedInClient {
     fn parse_person_card(&self, card: &scraper::ElementRef) -> Option<Person> {
         let title_selector = self
             .select_working_selector_for_element(card, selectors::person::SEARCH_TITLES)
-            .ok()?;
+            .ok();
         let headline_selector = self
             .select_working_selector_for_element(card, selectors::person::SEARCH_HEADLINES)
-            .ok()?;
+            .ok();
         let location_selector = self
             .select_working_selector_for_element(card, selectors::person::SEARCH_LOCATIONS)
-            .ok()?;
+            .ok();
 
-        let title_element = card.select(&title_selector).next()?;
+        let title_element = title_selector
+            .and_then(|sel| card.select(&sel).next())?;
         let name = title_element.text().collect::<String>().trim().to_string();
 
         let linkedin_url = title_element
@@ -80,14 +84,12 @@ impl LinkedInClient {
                 }
             })?;
 
-        let headline = card
-            .select(&headline_selector)
-            .next()
+        let headline = headline_selector
+            .and_then(|sel| card.select(&sel).next())
             .map(|el| el.text().collect::<String>().trim().to_string());
 
-        let location = card
-            .select(&location_selector)
-            .next()
+        let location = location_selector
+            .and_then(|sel| card.select(&sel).next())
             .map(|el| el.text().collect::<String>().trim().to_string());
 
         let mut person = Person::new(linkedin_url);
@@ -101,16 +103,22 @@ impl LinkedInClient {
     fn extract_experiences(&self, document: &Html) -> Result<Vec<Experience>> {
         let mut experiences = Vec::new();
 
-        let experience_section_selector = self.select_working_selector(
+        let experience_section_selector = match self.select_working_selector(
             document,
             selectors::person::EXPERIENCE_SECTION
-        )?;
+        ) {
+            Ok(selector) => selector,
+            Err(_) => return Ok(experiences),
+        };
 
         if let Some(experience_section) = document.select(&experience_section_selector).next() {
-            let item_selector = self.select_working_selector_for_element(
+            let item_selector = match self.select_working_selector_for_element(
                 &experience_section,
                 selectors::person::EXPERIENCE_ITEMS
-            )?;
+            ) {
+                Ok(selector) => selector,
+                Err(_) => return Ok(experiences),
+            };
 
             for item in experience_section.select(&item_selector) {
                 if let Some(experience) = self.parse_experience_item(&item) {
@@ -125,47 +133,42 @@ impl LinkedInClient {
     fn parse_experience_item(&self, item: &scraper::ElementRef) -> Option<Experience> {
         let title_selector = self
             .select_working_selector_for_element(item, selectors::person::EXPERIENCE_TITLES)
-            .ok()?;
+            .ok();
         let company_selector = self
             .select_working_selector_for_element(item, selectors::person::EXPERIENCE_COMPANIES)
-            .ok()?;
+            .ok();
         let duration_selector = self
             .select_working_selector_for_element(item, selectors::person::EXPERIENCE_INFO)
-            .ok()?;
+            .ok();
         let location_selector = self
             .select_working_selector_for_element(item, selectors::person::EXPERIENCE_INFO)
-            .ok()?;
+            .ok();
         let company_link_selector = self
             .select_working_selector_for_element(item, selectors::person::EXPERIENCE_COMPANY_LINKS)
-            .ok()?;
+            .ok();
 
-        let title = item
-            .select(&title_selector)
-            .next()
+        let title = title_selector
+            .and_then(|sel| item.select(&sel).next())
             .map(|el| el.text().collect::<String>().trim().to_string());
 
-        let company = item
-            .select(&company_selector)
-            .nth(1)
+        let company = company_selector
+            .and_then(|sel| item.select(&sel).nth(1))
             .map(|el| el.text().collect::<String>().trim().to_string());
 
-        let duration_text = item
-            .select(&duration_selector)
-            .next()
+        let duration_text = duration_selector
+            .and_then(|sel| item.select(&sel).next())
             .map(|el| el.text().collect::<String>().trim().to_string());
 
         let (from_date, to_date, duration) = self.parse_duration(
             &duration_text.unwrap_or_default()
         );
 
-        let location = item
-            .select(&location_selector)
-            .last()
+        let location = location_selector
+            .and_then(|sel| item.select(&sel).last())
             .map(|el| el.text().collect::<String>().trim().to_string());
 
-        let company_linkedin_url = item
-            .select(&company_link_selector)
-            .next()
+        let company_linkedin_url = company_link_selector
+            .and_then(|sel| item.select(&sel).next())
             .and_then(|el| el.value().attr("href"))
             .map(|href| {
                 if href.starts_with("http") {
@@ -190,16 +193,22 @@ impl LinkedInClient {
     fn extract_educations(&self, document: &Html) -> Result<Vec<Education>> {
         let mut educations = Vec::new();
 
-        let education_section_selector = self.select_working_selector(
+        let education_section_selector = match self.select_working_selector(
             document,
             selectors::person::EDUCATION_SECTION
-        )?;
+        ) {
+            Ok(selector) => selector,
+            Err(_) => return Ok(educations),
+        };
 
         if let Some(education_section) = document.select(&education_section_selector).next() {
-            let item_selector = self.select_working_selector_for_element(
+            let item_selector = match self.select_working_selector_for_element(
                 &education_section,
                 selectors::person::EDUCATION_ITEMS
-            )?;
+            ) {
+                Ok(selector) => selector,
+                Err(_) => return Ok(educations),
+            };
 
             for item in education_section.select(&item_selector) {
                 if let Some(education) = self.parse_education_item(&item) {
@@ -214,37 +223,33 @@ impl LinkedInClient {
     fn parse_education_item(&self, item: &scraper::ElementRef) -> Option<Education> {
         let school_selector = self
             .select_working_selector_for_element(item, selectors::person::EDUCATION_SCHOOLS)
-            .ok()?;
+            .ok();
         let degree_selector = self
             .select_working_selector_for_element(item, selectors::person::EDUCATION_DEGREES)
-            .ok()?;
+            .ok();
         let duration_selector = self
             .select_working_selector_for_element(item, selectors::person::EDUCATION_DURATIONS)
-            .ok()?;
+            .ok();
         let school_link_selector = self
             .select_working_selector_for_element(item, selectors::person::EDUCATION_SCHOOL_LINKS)
-            .ok()?;
+            .ok();
 
-        let school = item
-            .select(&school_selector)
-            .next()
+        let school = school_selector
+            .and_then(|sel| item.select(&sel).next())
             .map(|el| el.text().collect::<String>().trim().to_string());
 
-        let degree = item
-            .select(&degree_selector)
-            .next()
+        let degree = degree_selector
+            .and_then(|sel| item.select(&sel).next())
             .map(|el| el.text().collect::<String>().trim().to_string());
 
-        let duration_text = item
-            .select(&duration_selector)
-            .next()
+        let duration_text = duration_selector
+            .and_then(|sel| item.select(&sel).next())
             .map(|el| el.text().collect::<String>().trim().to_string());
 
         let (from_date, to_date, _) = self.parse_duration(&duration_text.unwrap_or_default());
 
-        let school_linkedin_url = item
-            .select(&school_link_selector)
-            .next()
+        let school_linkedin_url = school_link_selector
+            .and_then(|sel| item.select(&sel).next())
             .and_then(|el| el.value().attr("href"))
             .map(|href| {
                 if href.starts_with("http") {
@@ -337,10 +342,13 @@ impl LinkedInClient {
     fn extract_job_listings(&self, document: &Html) -> Result<Vec<Job>> {
         let mut jobs = Vec::new();
 
-        let job_card_selector = self.select_working_selector(
+        let job_card_selector = match self.select_working_selector(
             document,
             selectors::job::SEARCH_CARDS
-        )?;
+        ) {
+            Ok(selector) => selector,
+            Err(_) => return Ok(jobs),
+        };
 
         for job_card in document.select(&job_card_selector) {
             if let Some(job) = self.parse_job_card(&job_card) {
@@ -354,21 +362,22 @@ impl LinkedInClient {
     fn parse_job_card(&self, card: &scraper::ElementRef) -> Option<Job> {
         let title_selector = self
             .select_working_selector_for_element(card, selectors::job::SEARCH_TITLES)
-            .ok()?;
+            .ok();
 
         let company_selector = self
             .select_working_selector_for_element(card, selectors::job::SEARCH_COMPANIES)
-            .ok()?;
+            .ok();
 
         let location_selector = self
             .select_working_selector_for_element(card, selectors::job::SEARCH_LOCATIONS)
-            .ok()?;
+            .ok();
 
         let posted_date_selector = self
             .select_working_selector_for_element(card, selectors::job::SEARCH_POSTED_DATES)
-            .ok()?;
+            .ok();
 
-        let title_element = card.select(&title_selector).next()?;
+        let title_element = title_selector
+            .and_then(|sel| card.select(&sel).next())?;
         let title = title_element.text().collect::<String>().trim().to_string();
 
         let linkedin_url = title_element
@@ -382,27 +391,23 @@ impl LinkedInClient {
                 }
             })?;
 
-        let company = card
-            .select(&company_selector)
-            .next()
+        let company = company_selector
+            .and_then(|sel| card.select(&sel).next())
             .map(|el| el.text().collect::<String>().trim().to_string());
 
-        let location = card
-            .select(&location_selector)
-            .next()
+        let location = location_selector
+            .and_then(|sel| card.select(&sel).next())
             .map(|el| el.text().collect::<String>().trim().to_string());
 
-        let posted_date = card
-            .select(&posted_date_selector)
-            .next()
+        let posted_date = posted_date_selector
+            .and_then(|sel| card.select(&sel).next())
             .map(|el| el.text().collect::<String>().trim().to_string());
 
         let company_link_selector = self
             .select_working_selector_for_element(card, selectors::job::SEARCH_COMPANY_LINKS)
-            .ok()?;
-        let company_linkedin_url = card
-            .select(&company_link_selector)
-            .next()
+            .ok();
+        let company_linkedin_url = company_link_selector
+            .and_then(|sel| card.select(&sel).next())
             .and_then(|el| el.value().attr("href"))
             .map(|href| {
                 if href.starts_with("http") {
@@ -507,10 +512,13 @@ impl LinkedInClient {
     fn extract_employees(&self, document: &Html) -> Result<Vec<Employee>> {
         let mut employees = Vec::new();
 
-        let employee_selector = self.select_working_selector(
+        let employee_selector = match self.select_working_selector(
             document,
             selectors::company::EMPLOYEE_CARDS
-        )?;
+        ) {
+            Ok(selector) => selector,
+            Err(_) => return Ok(employees),
+        };
 
         for employee_element in document.select(&employee_selector) {
             if let Some(employee) = self.parse_employee_item(&employee_element) {
@@ -524,29 +532,26 @@ impl LinkedInClient {
     fn parse_employee_item(&self, item: &scraper::ElementRef) -> Option<Employee> {
         let name_selector = self
             .select_working_selector_for_element(item, selectors::company::EMPLOYEE_NAMES)
-            .ok()?;
+            .ok();
 
         let title_selector = self
             .select_working_selector_for_element(item, selectors::company::EMPLOYEE_TITLES)
-            .ok()?;
+            .ok();
 
         let link_selector = self
             .select_working_selector_for_element(item, selectors::company::EMPLOYEE_LINKS)
-            .ok()?;
+            .ok();
 
-        let name = item
-            .select(&name_selector)
-            .next()
+        let name = name_selector
+            .and_then(|sel| item.select(&sel).next())
             .map(|el| el.text().collect::<String>().trim().to_string())?;
 
-        let title = item
-            .select(&title_selector)
-            .next()
+        let title = title_selector
+            .and_then(|sel| item.select(&sel).next())
             .map(|el| el.text().collect::<String>().trim().to_string());
 
-        let linkedin_url = item
-            .select(&link_selector)
-            .next()
+        let linkedin_url = link_selector
+            .and_then(|sel| item.select(&sel).next())
             .and_then(|el| el.value().attr("href"))
             .map(|href| {
                 if href.starts_with("http") {

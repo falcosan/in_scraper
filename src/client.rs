@@ -94,9 +94,12 @@ impl LinkedInClient {
         document: &Html,
         selector_strs: &[&str]
     ) -> Vec<String> {
-        let selector = self
-            .select_working_selector(document, selector_strs)
-            .unwrap_or_else(|_| panic!("Invalid selector: {selector_strs:?}"));
+        let selector = match self.select_working_selector(document, selector_strs) {
+            Ok(s) => s,
+            Err(_) => {
+                return Vec::new();
+            }
+        };
         document
             .select(&selector)
             .map(|element| { element.text().collect::<Vec<_>>().join(" ").trim().to_string() })
