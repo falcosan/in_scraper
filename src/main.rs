@@ -30,7 +30,7 @@ async fn main() -> Result<()> {
     }
 
     let client = LinkedInClient::new_with_cookie(&li_at_cookie).map_err(|e| {
-        eprintln!("Failed to create client with li_at cookie: {}", e);
+        eprintln!("Failed to create client with li_at cookie: {e}");
         e
     })?;
 

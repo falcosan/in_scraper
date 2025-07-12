@@ -24,7 +24,7 @@ impl LinkedInClient {
         headers.insert("Sec-Fetch-Site", "none".parse().unwrap());
         headers.insert("Sec-Fetch-User", "?1".parse().unwrap());
 
-        let cookie_value = format!("li_at={}", li_at_cookie);
+        let cookie_value = format!("li_at={li_at_cookie}");
         headers.insert(
             "Cookie",
             cookie_value
@@ -40,7 +40,7 @@ impl LinkedInClient {
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
             )
             .build()
-            .map_err(|e| LinkedInError::Unknown(format!("Failed to create HTTP client: {}", e)))?;
+            .map_err(|e| LinkedInError::Unknown(format!("Failed to create HTTP client: {e}")))?;
 
         Ok(Self {
             client,

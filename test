@@ -9,4 +9,11 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+cargo clippy --all-features --quiet
+
+if [ $? -ne 0 ]; then
+    echo "Clippy found issues"
+    exit 1
+fi
+
 echo "All tests passed"
