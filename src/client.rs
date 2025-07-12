@@ -1,5 +1,6 @@
 use reqwest::Client;
 use scraper::{ Html, Selector };
+use html_escape::decode_html_entities;
 use crate::error::{ LinkedInError, Result };
 
 pub struct LinkedInClient {
@@ -61,14 +62,9 @@ impl LinkedInClient {
         }
 
         let html = response.text().await?;
+        let decoded_html = decode_html_entities(&html);
 
-        if html.len() < 1000 {
-            return Err(
-                LinkedInError::Unknown("Page content too short, possible bot detection".to_string())
-            );
-        }
-
-        Ok(Html::parse_document(&html))
+        Ok(Html::parse_document(&decoded_html))
     }
 
     pub fn extract_text_by_selector(
