@@ -26,8 +26,8 @@ async fn main() -> Result<()> {
         eprintln!("Logging into LinkedIn...");
     }
 
-    let client = LinkedInClient::login_with_retry(&email, &password, 2).await.map_err(|e| {
-        match &e {
+    let client = LinkedInClient::login_with_retry(&email, &password, 2).await.inspect_err(|e| {
+        match e {
             in_scraper::LinkedInError::AuthenticationFailed => {
                 eprintln!("Authentication failed. Please check your LinkedIn credentials.");
                 eprintln!("Make sure you can log in via web browser first.");
@@ -39,7 +39,6 @@ async fn main() -> Result<()> {
                 eprintln!("{msg}");
             }
         }
-        e
     })?;
 
     if verbose {
