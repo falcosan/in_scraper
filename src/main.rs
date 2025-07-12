@@ -1,6 +1,4 @@
 use clap::Parser;
-use std::io::{ self, Write };
-use rpassword::read_password;
 use commands::execute_command;
 use cli::{ Cli, OutputFormat };
 use in_scraper::{ LinkedInClient, Result };
@@ -19,28 +17,25 @@ async fn main() -> Result<()> {
         eprintln!("in_scraper v{}", env!("CARGO_PKG_VERSION"));
     }
 
-    let email = get_credential(args.email, "LinkedIn Email", "LINKEDIN_EMAIL", false)?;
-    let password = get_credential(args.password, "LinkedIn Password", "LINKEDIN_PASSWORD", true)?;
+    let li_at_cookie = args.li_at
+        .or_else(|| std::env::var("LINKEDIN_LI_AT").ok())
+        .ok_or_else(||
+            in_scraper::LinkedInError::Unknown(
+                "LinkedIn li_at cookie is required. Provide it via --li-at parameter or LINKEDIN_LI_AT environment variable.".to_string()
+            )
+        )?;
 
     if verbose {
-        eprintln!("Logging into LinkedIn...");
+        eprintln!("Using li_at cookie for authentication...");
     }
 
-    let client = LinkedInClient::login_with_retry(&email, &password, 2).await.inspect_err(|e| {
-        match e {
-            in_scraper::LinkedInError::AuthenticationFailed => {
-                eprintln!("Authentication failed. Please check your LinkedIn credentials.");
-                eprintln!("Make sure you can log in via web browser first.");
-            }
-            in_scraper::LinkedInError::RateLimited => {
-                eprintln!("Rate limited by LinkedIn. Please wait and try again later.");
-            }
-            _ => {}
-        }
+    let client = LinkedInClient::new_with_cookie(&li_at_cookie).map_err(|e| {
+        eprintln!("Failed to create client with li_at cookie: {}", e);
+        e
     })?;
 
     if verbose {
-        eprintln!("Successfully logged in!");
+        eprintln!("Successfully authenticated!");
     }
 
     execute_command(&client, args.command, format, output, verbose).await?;
@@ -90,43 +85,4 @@ fn get_command_options(args: &Cli) -> (OutputFormat, Option<String>, bool) {
             )
         }
     }
-}
-
-fn get_credential(
-    provided: Option<String>,
-    prompt: &str,
-    env_var: &str,
-    is_password: bool
-) -> Result<String> {
-    if let Some(cred) = provided {
-        return Ok(cred);
-    }
-
-    if let Ok(cred) = std::env::var(env_var) {
-        return Ok(cred);
-    }
-
-    print!("{prompt}: ");
-    io::stdout().flush().unwrap();
-
-    let credential = if is_password {
-        read_password().map_err(|e| {
-            in_scraper::LinkedInError::Unknown(format!("Failed to read password: {e}"))
-        })?
-    } else {
-        let mut input = String::new();
-        io
-            ::stdin()
-            .read_line(&mut input)
-            .map_err(|e| {
-                in_scraper::LinkedInError::Unknown(format!("Failed to read input: {e}"))
-            })?;
-        input.trim().to_string()
-    };
-
-    if credential.is_empty() {
-        return Err(in_scraper::LinkedInError::Unknown(format!("{prompt} cannot be empty")));
-    }
-
-    Ok(credential)
 }

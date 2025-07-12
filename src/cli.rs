@@ -8,11 +8,8 @@ pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
 
-    #[arg(short, long)]
-    pub email: Option<String>,
-
-    #[arg(short, long)]
-    pub password: Option<String>,
+    #[arg(long, help = "LinkedIn li_at session cookie for authentication")]
+    pub li_at: Option<String>,
 
     #[arg(short = 'f', long, default_value = "json")]
     pub format: OutputFormat,

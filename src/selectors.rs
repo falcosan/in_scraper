@@ -140,17 +140,3 @@ pub mod job {
     ];
     pub const SEARCH_COMPANY_LINKS: &[&str] = &["a[href*='/company/']"];
 }
-
-pub mod auth {
-    pub const EMAIL_INPUT: &[&str] = &["#username"];
-    pub const PASSWORD_INPUT: &[&str] = &["#password"];
-    pub const LOGIN_BUTTON: &[&str] = &[
-        "button[data-litms-control-urn='login-submit']",
-        ".btn__primary--large",
-    ];
-    pub const CSRF_TOKEN: &[&str] = &["input[name='loginCsrfParam']"];
-    pub const VERIFICATION_ELEMENT: &[&str] = &[
-        "nav.global-nav",
-        "a[data-test-global-nav-link='feed']",
-    ];
-}

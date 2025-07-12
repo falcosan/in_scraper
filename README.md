@@ -9,7 +9,7 @@ A fast and efficient LinkedIn scraper written in Rust with a comprehensive comma
 - **Company Data**: Get company information and employee lists
 - **Job Search**: Search and scrape job postings
 - **CLI Tool**: Complete command-line interface
-- **Authentication**: Secure login with cookie persistence
+- **Cookie Authentication**: Secure authentication using LinkedIn session cookies
 - **Multiple Formats**: JSON, pretty JSON, table, and summary outputs
 - **Async/Await**: High-performance asynchronous requests
 
@@ -31,7 +31,7 @@ use in_scraper::{LinkedInClient, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let client = LinkedInClient::login("email@example.com", "password").await?;
+    let client = LinkedInClient::new_with_cookie("your-li-at-cookie-value")?;
 
     let person = client.scrape_person("https://www.linkedin.com/in/example").await?;
     println!("Name: {:?}", person.name);
@@ -49,16 +49,27 @@ async fn main() -> Result<()> {
 }
 ```
 
-### Environment Variables
+### Cookie Authentication
 
-Set credentials securely using a `.env` file:
+To use the LinkedIn scraper, you need to provide your LinkedIn session cookie (`li_at`):
 
-Create a `.env` file in your project root:
+1. **Get your li_at cookie**:
 
-```bash
-LINKEDIN_EMAIL=your-email@example.com
-LINKEDIN_PASSWORD=your-password
-```
+   - Log into LinkedIn in your browser
+   - Open browser developer tools (F12)
+   - Go to Application/Storage tab > Cookies > linkedin.com
+   - Copy the value of the `li_at` cookie
+
+2. **Use with environment variable**:
+
+   ```bash
+   LINKEDIN_LI_AT=your-li-at-cookie-value
+   ```
+
+3. **Use with command line**:
+   ```bash
+   in_scraper --li-at "your-li-at-cookie-value" <command>
+   ```
 
 ## Command Line Interface
 
@@ -74,25 +85,18 @@ The binary is available at `./target/release/in_scraper`
 
 ### Authentication
 
-Provide credentials in three ways:
+You must provide your LinkedIn li_at cookie in one of two ways:
 
-1. **.env file** (Recommended):
+1. **Environment Variable** (Recommended):
    Create a `.env` file in your project root:
 
    ```bash
-   LINKEDIN_EMAIL=your-email@example.com
-   LINKEDIN_PASSWORD=your-password
+   LINKEDIN_LI_AT=your-li-at-cookie-value
    ```
 
-2. **Command Line Arguments**:
-
+2. **Command Line Argument**:
    ```bash
-   in_scraper --email your-email@example.com --password your-password <command>
-   ```
-
-3. **Interactive Prompt**:
-   ```bash
-   in_scraper <command>
+   in_scraper --li-at "your-li-at-cookie-value" <command>
    ```
 
 ### Global Options

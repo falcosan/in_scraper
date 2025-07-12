@@ -10,9 +10,6 @@ pub enum LinkedInError {
 
     #[error("IO error: {0}")] Io(#[from] std::io::Error),
 
-    #[error("Authentication failed")]
-    AuthenticationFailed,
-
     #[error("Profile not found: {0}")] ProfileNotFound(String),
 
     #[error("Element not found: {0}")] ElementNotFound(String),
