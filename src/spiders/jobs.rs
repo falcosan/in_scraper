@@ -20,7 +20,7 @@ impl JobsSpider {
         let http_client = HttpClient::new(config.clone()).expect("Failed to create HTTP client");
 
         let api_url = format!(
-            "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords={}&location={}&trk=public_jobs_jobs-search-bar_search-submit&start=",
+            "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords={}&location={}",
             encode(&keywords),
             encode(&location)
         );
