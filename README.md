@@ -1,241 +1,182 @@
-# LinkedIn Scraper
+# LinkedIn Scraper - Rust Implementation
 
-A fast and efficient LinkedIn scraper written in Rust with a comprehensive command-line interface.
+A Rust implementation of a LinkedIn scraper that can extract company profiles, job listings, and people profiles.
 
 ## Features
 
-- **Person Profiles**: Extract detailed information from LinkedIn profiles
-- **People Search**: Search for people by name, job title, or criteria
-- **Company Data**: Get company information and employee lists
-- **Job Search**: Search and scrape job postings
-- **CLI Tool**: Complete command-line interface
-- **Cookie Authentication**: Secure authentication using LinkedIn session cookies
-- **Multiple Formats**: JSON, pretty JSON, table, and summary outputs
-- **Async/Await**: High-performance asynchronous requests
+- **Company Profile Spider**: Scrapes company information including name, summary, industry, size, and founding date
+- **Jobs Spider**: Scrapes job listings with pagination support
+- **People Profile Spider**: Scrapes people profiles including experience and education
+- **Concurrent Processing**: Configurable concurrent request handling
+- **Robust HTTP Client**: Built-in retry mechanisms and rate limiting handling
+- **JSON Lines Output**: Saves data in JSONL format with timestamps
+- **Configurable Timeouts**: Customizable request timeouts and retry settings
 
 ## Installation
 
-Add to your `Cargo.toml`:
-
-```toml
-[dependencies]
-in_scraper = "0.1.0"
-```
-
-## Quick Start
-
-### Basic Usage
-
-```rust
-use in_scraper::{LinkedInClient, Result};
-
-#[tokio::main]
-async fn main() -> Result<()> {
-    let client = LinkedInClient::new("your-li-at-cookie-value")?;
-
-    let person = client.scrape_person("https://www.linkedin.com/in/example").await?;
-    println!("Name: {:?}", person.name);
-
-    let people = client.search_people("Software Engineer", Some("Rome")).await?;
-    println!("Found {} people", people.len());
-
-    let company = client.scrape_company("https://www.linkedin.com/company/example").await?;
-    println!("Company: {:?}", company.name);
-
-    let jobs = client.search_jobs("Software Engineer", Some("Rome")).await?;
-    println!("Found {} jobs", jobs.len());
-
-    Ok(())
-}
-```
-
-### Cookie Authentication
-
-To use the LinkedIn scraper, you need to provide your LinkedIn session cookie (`li_at`):
-
-1. **Get your li_at cookie**:
-
-   - Log into LinkedIn in your browser
-   - Open browser developer tools (F12)
-   - Go to Application/Storage tab > Cookies > linkedin.com
-   - Copy the value of the `li_at` cookie
-
-2. **Use with environment variable**:
-
-   ```bash
-   LINKEDIN_LI_AT=your-li-at-cookie-value
-   ```
-
-3. **Use with command line**:
-   ```bash
-   in_scraper --li-at "your-li-at-cookie-value" <command>
-   ```
-
-## Command Line Interface
-
-### Installation
-
-Build the project:
+1. Make sure you have Rust installed (https://rustup.rs/)
+2. Clone this repository
+3. Build the project:
 
 ```bash
 cargo build --release
 ```
 
-The binary is available at `./target/release/in_scraper`
+## Usage
 
-### Authentication
+The scraper provides three main commands:
 
-You must provide your LinkedIn li_at cookie in one of two ways:
+### Company Profile Scraper
 
-1. **Environment Variable** (Recommended):
-   Create a `.env` file in your project root:
+```bash
+# Scrape specific company profiles
+cargo run -- company-profile --urls "https://www.linkedin.com/company/microsoft" --urls "https://www.linkedin.com/company/google"
 
-   ```bash
-   LINKEDIN_LI_AT=your-li-at-cookie-value
-   ```
+# With custom settings
+cargo run -- company-profile --urls "https://www.linkedin.com/company/microsoft" --concurrent 3 --timeout 60 --retries 5
+```
 
-2. **Command Line Argument**:
-   ```bash
-   in_scraper --li-at "your-li-at-cookie-value" <command>
-   ```
+### Jobs Scraper
+
+```bash
+# Scrape job listings
+cargo run -- jobs --keywords "rust developer" --location "San Francisco"
+
+# With concurrency and custom settings
+cargo run -- jobs --keywords "data scientist" --concurrent 5 --timeout 45 --retries 3
+```
+
+### People Profile Scraper
+
+```bash
+# Scrape people profiles
+cargo run -- people-profile --profiles "reidhoffman" --profiles "jeffweiner"
+
+# With custom output directory and settings
+cargo run -- people-profile --profiles "satyanadella" --output custom_data --timeout 30
+```
+
+## Command Line Options
 
 ### Global Options
 
-Use these options with any command:
+- `-c, --concurrent <N>`: Number of concurrent requests (default: 1)
+- `-o, --output <PATH>`: Output directory for JSON files (default: "data")
+- `--timeout <SECONDS>`: Request timeout in seconds (default: 30)
+- `--retries <N>`: Maximum number of retries for failed requests (default: 3)
 
-- `--format <format>`: Output format (json, pretty, summary, table)
-- `--output <file>`: Save results to file
-- `--verbose`: Show detailed progress
+### Jobs Command Options
 
-### Commands
+- `--keywords <KEYWORDS>`: Search keywords
+- `--location <LOCATION>`: Job location
 
-#### Person Profile Scraping
+### Company Profile Command Options
 
-```bash
-# Basic usage
-in_scraper person "https://www.linkedin.com/in/someone"
+- `--urls <URL>`: Company profile URLs (can be specified multiple times)
 
-# Pretty output
-in_scraper person "https://www.linkedin.com/in/someone" --format pretty
+### People Profile Command Options
 
-# Save to file
-in_scraper person "https://www.linkedin.com/in/someone" --output person.json
-```
+- `--profiles <PROFILE>`: LinkedIn profile usernames (can be specified multiple times)
 
-#### People Search
+## Output Format
 
-```bash
-# Basic search
-in_scraper people "Software Engineer"
+Data is saved in JSON Lines format with timestamps:
 
-# With location
-in_scraper people "Data Scientist" --location "Rosario, AR"
+- Company profiles: `data/linkedin_company_profile_YYYYMMDD_HHMMSS.jsonl`
+- Job listings: `data/linkedin_jobs_YYYYMMDD_HHMMSS.jsonl`
+- People profiles: `data/linkedin_people_profile_YYYYMMDD_HHMMSS.jsonl`
 
-# Get detailed info for first 3 results
-in_scraper people "Product Manager" --details 3
+## Environment Variables
 
-# Table format
-in_scraper people "Machine Learning" --format table
-```
+You can set configuration via environment variables:
 
-#### Company Scraping
+- `CONCURRENT_REQUESTS`: Number of concurrent requests
+- `REQUEST_TIMEOUT`: Request timeout in seconds
+- `MAX_RETRIES`: Maximum number of retries for failed requests
 
-```bash
-# Basic company info
-in_scraper company "https://www.linkedin.com/company/example-company"
+## Architecture
 
-# Include employees
-in_scraper company "https://www.linkedin.com/company/example-company" --employees
+The scraper follows a modular architecture:
 
-# Summary format
-in_scraper company "https://www.linkedin.com/company/example-company" --format summary
-```
+- **Spiders**: Define scraping logic for each data type
+- **HTTP Client**: Handles requests with retry mechanisms and rate limiting
+- **Pipeline**: Processes and saves scraped items
+- **Middleware**: Extensible request/response processing
 
-#### Job Search
+## HTTP Client Features
 
-```bash
-# Basic job search
-in_scraper jobs "Software Engineer"
+The built-in HTTP client includes:
 
-# With location
-in_scraper jobs "Data Scientist" --location "Rosario, AR"
+- **Automatic retries** with exponential backoff
+- **Rate limiting detection** and handling
+- **Configurable timeouts**
+- **Connection pooling** for better performance
+- **User-agent rotation** support
+- **Comprehensive error handling**
 
-# Get detailed info for first 3 jobs
-in_scraper jobs "Product Manager" --details 3
+## Development
 
-# Table format
-in_scraper jobs "Machine Learning" --format table
-```
-
-#### Specific Job Scraping
+To run in development mode with debug logging:
 
 ```bash
-# Scrape job details
-in_scraper job "https://www.linkedin.com/jobs/view/1234567890"
-
-# Summary format
-in_scraper job "https://www.linkedin.com/jobs/view/1234567890" --format summary
+RUST_LOG=debug cargo run -- jobs
 ```
 
-### Output Formats
+## Testing
 
-- **json**: Compact JSON for programmatic use
-- **pretty**: Human-readable, indented JSON
-- **summary**: Concise summary of key information
-- **table**: Tabular format for multiple items
-
-### Examples
-
-#### Research Workflow
+Run tests with:
 
 ```bash
-# Get detailed profile
-in_scraper person "https://linkedin.com/in/john-doe" --format summary
-
-# Find professionals
-in_scraper people "Senior Developer" --location "Rome" --format table
-
-# Company analysis
-in_scraper company "https://linkedin.com/company/tech-startup" --employees --output company_data.json
-
-# Job market research
-in_scraper jobs "Senior Developer" --location "Rome" --details 5 --output opportunities.json
+cargo test
 ```
 
-#### Automation
+## Performance Considerations
 
-```bash
-# Count total jobs found
-in_scraper jobs "Python Developer" --format json | jq '. | length'
+- The scraper respects rate limits by default (1 concurrent request)
+- Increase concurrency carefully to avoid being blocked
+- Use appropriate timeout and retry settings for your use case
+- Consider implementing delays between requests for production use
 
-# Extract company names
-in_scraper jobs "React Developer" --format json | jq '.[].company'
+## Rate Limiting and Best Practices
 
-# Filter remote jobs
-in_scraper jobs "Machine Learning" --format json | jq '.[] | select(.location | contains("Remote"))'
-```
+The scraper includes several mechanisms to handle rate limiting:
 
-## Rate Limiting
-
-LinkedIn has rate limiting. To avoid being blocked:
-
-- Add delays between requests
-- Use residential proxies for large-scale scraping
-- Respect robots.txt
-- Don't scrape more than necessary
-
-## Security Notes
-
-- Never commit credentials to version control
-- Use environment variables for credential storage
-- Be mindful of LinkedIn's Terms of Service
-- Respect rate limits to avoid being blocked
-- Use for legitimate research purposes only
-
-## Legal Notice
-
-This tool is for educational and research purposes. Always check LinkedIn's Terms of Service and respect rate limits. The authors are not responsible for any misuse of this software.
+1. **Exponential backoff** on retries
+2. **429 status code detection** with automatic retry
+3. **Configurable delays** between requests
+4. **Connection pooling** to reduce overhead
 
 ## License
 
-MIT License - see LICENSE file for details.
+This project is for educational purposes only. Please respect LinkedIn's Terms of Service and robots.txt when using this scraper.
+
+## Configuration Examples
+
+### Basic Configuration
+
+```bash
+# Simple job search
+cargo run -- jobs --keywords "software engineer" --location "New York"
+```
+
+### Advanced Configuration
+
+```bash
+# High-performance scraping with custom settings
+cargo run -- jobs \
+  --keywords "machine learning" \
+  --location "San Francisco" \
+  --concurrent 5 \
+  --timeout 60 \
+  --retries 5 \
+  --output ml_jobs_data
+```
+
+### Environment Variables Setup
+
+```bash
+export CONCURRENT_REQUESTS=3
+export REQUEST_TIMEOUT=45
+export MAX_RETRIES=4
+cargo run -- company-profile --urls "https://www.linkedin.com/company/apple"
+```

@@ -1,8 +1,8 @@
-pub mod error;
-pub mod client;
-pub mod models;
-pub mod scraping;
-pub mod selectors;
-pub use client::LinkedInClient;
-pub use error::{ LinkedInError, Result };
-pub use models::{ Company, Contact, Education, Employee, Experience, Job, Person };
+pub mod config;
+pub mod items;
+pub mod utils;
+pub mod spiders;
+pub mod pipeline;
+pub mod middleware;
+
+pub use config::Config;

@@ -1,26 +1,21 @@
 [package]
-name = "in_scraper"
+name = "in-scraper"
 version = "0.1.0"
 edition = "2021"
-description = "A fast and simple LinkedIn scraper written in Rust"
-license = "MIT"
 
 [dependencies]
 url = "2.5"
-regex = "1.11"
-dotenv = "0.15"
-tabled = "0.20"
+anyhow = "1.0"
+tracing = "0.1"
+futures = "0.3"
 scraper = "0.23"
 thiserror = "2.0"
 serde_json = "1.0"
+async-trait = "0.1"
 urlencoding = "2.1"
-html-escape = "0.2.13"
 tokio = { version = "1.46", features = ["full"] }
 clap = { version = "4.5", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }
 chrono = { version = "0.4", features = ["serde"] }
-reqwest = { version = "0.12", features = ["json", "cookies"] }
-
-[[bin]]
-name = "in_scraper"
-path = "src/main.rs" 
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+reqwest = { version = "0.12", features = ["json", "cookies", "gzip"] }
