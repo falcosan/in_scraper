@@ -6,4 +6,4 @@
 .vscode/
 .env
 *.log
-*.html
+html/

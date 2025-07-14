@@ -65,7 +65,10 @@ impl LinkedInClient {
         let html = response.text().await?;
         let decoded_html = decode_html_entities(&html);
 
-        write(format!("{}.html", url.replace("https://", "").replace("/", "_")), &*decoded_html)?;
+        write(
+            format!("html/{}.html", url.replace("https://", "").replace("/", "_")),
+            &*decoded_html
+        )?;
 
         Ok(Html::parse_document(&decoded_html))
     }
