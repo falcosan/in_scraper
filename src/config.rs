@@ -15,14 +15,14 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            bot_name: "linkedin".to_string(),
-            concurrent_requests: 1,
-            robotstxt_obey: false,
-            output_dir: "data".to_string(),
-            user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36".to_string(),
-            request_timeout: 30,
             max_retries: 3,
+            request_timeout: 30,
             retry_delay_ms: 1000,
+            robotstxt_obey: false,
+            concurrent_requests: 1,
+            output_dir: "data".to_string(),
+            bot_name: "linkedin".to_string(),
+            user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36".to_string(),
         }
     }
 }
