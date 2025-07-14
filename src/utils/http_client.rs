@@ -1,10 +1,10 @@
 use std::sync::Arc;
+use tokio::time::sleep;
 use std::time::Duration;
 use crate::config::Config;
 use tracing::{ debug, error, warn };
 use anyhow::{ Result, Context };
 use reqwest::{ Client, Response, StatusCode };
-use tokio::time::sleep;
 
 pub struct HttpClient {
     client: Client,
@@ -56,7 +56,7 @@ impl HttpClient {
                         warn!("Rate limited (429), retrying after delay");
                         if retries < max_retries {
                             retries += 1;
-                            sleep(retry_delay * (retries as u32)).await;
+                            sleep(retry_delay * retries).await;
                             continue;
                         }
                     }
@@ -65,7 +65,7 @@ impl HttpClient {
                         error!("Server error: {}, retrying", status);
                         if retries < max_retries {
                             retries += 1;
-                            sleep(retry_delay * (retries as u32)).await;
+                            sleep(retry_delay * retries).await;
                             continue;
                         }
                     }
@@ -83,7 +83,7 @@ impl HttpClient {
                     if retries < max_retries {
                         retries += 1;
                         warn!("Retrying request (attempt {}/{})", retries, max_retries + 1);
-                        sleep(retry_delay * (retries as u32)).await;
+                        sleep(retry_delay * retries).await;
                         continue;
                     }
 
