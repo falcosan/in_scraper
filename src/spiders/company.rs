@@ -70,9 +70,13 @@ impl Spider for CompanyProfileSpider {
         let document = Html::parse_document(&response);
         let mut items = Vec::new();
 
-        let name_selector = Selector::parse(crate::selectors::COMPANY_NAME).unwrap();
-        let summary_selector = Selector::parse(crate::selectors::COMPANY_SUMMARY).unwrap();
-        let details_selector = Selector::parse(crate::selectors::COMPANY_DETAILS).unwrap();
+        let name_selector = Selector::parse(crate::selectors::CompanySelectors::NAME).unwrap();
+        let summary_selector = Selector::parse(
+            crate::selectors::CompanySelectors::SUMMARY
+        ).unwrap();
+        let details_selector = Selector::parse(
+            crate::selectors::CompanySelectors::DETAILS
+        ).unwrap();
 
         let name = document
             .select(&name_selector)
@@ -97,7 +101,9 @@ impl Spider for CompanyProfileSpider {
         };
 
         if details.len() > 1 {
-            let text_selector = Selector::parse(crate::selectors::COMPANY_TEXT_MD).unwrap();
+            let text_selector = Selector::parse(
+                crate::selectors::CompanySelectors::TEXT_MD
+            ).unwrap();
             let industry_texts: Vec<_> = details[1]
                 .select(&text_selector)
                 .map(|el| el.text().collect::<String>().trim().to_string())
@@ -108,7 +114,9 @@ impl Spider for CompanyProfileSpider {
         }
 
         if details.len() > 2 {
-            let text_selector = Selector::parse(crate::selectors::COMPANY_TEXT_MD).unwrap();
+            let text_selector = Selector::parse(
+                crate::selectors::CompanySelectors::TEXT_MD
+            ).unwrap();
             let size_texts: Vec<_> = details[2]
                 .select(&text_selector)
                 .map(|el| el.text().collect::<String>().trim().to_string())
@@ -119,7 +127,9 @@ impl Spider for CompanyProfileSpider {
         }
 
         if details.len() > 5 {
-            let text_selector = Selector::parse(crate::selectors::COMPANY_TEXT_MD).unwrap();
+            let text_selector = Selector::parse(
+                crate::selectors::CompanySelectors::TEXT_MD
+            ).unwrap();
             let founded_texts: Vec<_> = details[5]
                 .select(&text_selector)
                 .map(|el| el.text().collect::<String>().trim().to_string())

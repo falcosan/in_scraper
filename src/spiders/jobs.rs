@@ -82,19 +82,21 @@ impl Spider for JobsSpider {
         let mut items = Vec::new();
         let mut next_requests = Vec::new();
 
-        let job_selector = Selector::parse(crate::selectors::JOB_ITEM).unwrap();
+        let job_selector = Selector::parse(crate::selectors::JobSelectors::ITEM).unwrap();
         let jobs: Vec<_> = document.select(&job_selector).collect();
 
         info!("Number of jobs returned: {}", jobs.len());
 
         for job in &jobs {
-            let title_selector = Selector::parse(crate::selectors::JOB_TITLE).unwrap();
-            let url_selector = Selector::parse(crate::selectors::JOB_URL).unwrap();
-            let time_selector = Selector::parse(crate::selectors::JOB_TIME).unwrap();
+            let title_selector = Selector::parse(crate::selectors::JobSelectors::TITLE).unwrap();
+            let url_selector = Selector::parse(crate::selectors::JobSelectors::URL).unwrap();
+            let time_selector = Selector::parse(crate::selectors::JobSelectors::TIME).unwrap();
             let company_name_selector = Selector::parse(
-                crate::selectors::JOB_COMPANY_NAME
+                crate::selectors::JobSelectors::COMPANY_NAME
             ).unwrap();
-            let location_selector = Selector::parse(crate::selectors::JOB_LOCATION).unwrap();
+            let location_selector = Selector::parse(
+                crate::selectors::JobSelectors::LOCATION
+            ).unwrap();
 
             let job_title = job
                 .select(&title_selector)
