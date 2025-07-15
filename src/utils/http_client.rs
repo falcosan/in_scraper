@@ -51,9 +51,7 @@ impl HttpClient {
         // );
         self.execute_with_retry(||
             self.client
-                .get(
-                    format!("https://proxy.scrapeops.io/v1/?api_key=1a816100-42cc-4945-870a-6a82f2a88674&url={url}")
-                )
+                .get(url)
                 // .header("cookie", &cookie_header)
                 // .header("referer", "https://www.linkedin.com/feed/")
                 // .header("accept", "application/vnd.linkedin.normalized+json+2.1")
@@ -103,7 +101,7 @@ impl HttpClient {
                     }
 
                     if status.is_client_error() {
-                        error!("Client error: {} - this might be a permanent issue", status);
+                        error!("Client error: {}", status);
                         return Err(anyhow::anyhow!("HTTP client error: {}", status));
                     }
 
