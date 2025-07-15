@@ -8,7 +8,7 @@ A Rust implementation of a LinkedIn scraper that can extract company profiles, j
 - **Jobs Spider**: Scrapes job listings with pagination support
 - **People Profile Spider**: Scrapes people profiles including experience and education
 - **Concurrent Processing**: Configurable concurrent request handling
-- **Robust HTTP Client**: Built-in retry mechanisms and rate limiting handling
+- **HTTP Client**: Built-in retry mechanisms and rate limiting handling
 - **JSON Lines Output**: Saves data in JSONL format with timestamps
 - **Configurable Timeouts**: Customizable request timeouts and retry settings
 
@@ -78,14 +78,6 @@ cargo run -- people-profile --profiles "satyanadella" --output custom_data --tim
 
 - `--profiles <PROFILE>`: LinkedIn profile usernames (can be specified multiple times)
 
-## Output Format
-
-Data is saved in JSON Lines format with timestamps:
-
-- Company profiles: `data/linkedin_company_profile_YYYYMMDD_HHMMSS.jsonl`
-- Job listings: `data/linkedin_jobs_YYYYMMDD_HHMMSS.jsonl`
-- People profiles: `data/linkedin_people_profile_YYYYMMDD_HHMMSS.jsonl`
-
 ## Environment Variables
 
 You can set configuration via environment variables:
@@ -122,14 +114,6 @@ To run in development mode with debug logging:
 RUST_LOG=debug cargo run -- jobs
 ```
 
-## Testing
-
-Run tests with:
-
-```bash
-cargo test
-```
-
 ## Performance Considerations
 
 - The scraper respects rate limits by default (1 concurrent request)
@@ -149,34 +133,3 @@ The scraper includes several mechanisms to handle rate limiting:
 ## License
 
 This project is for educational purposes only. Please respect LinkedIn's Terms of Service and robots.txt when using this scraper.
-
-## Configuration Examples
-
-### Basic Configuration
-
-```bash
-# Simple job search
-cargo run -- jobs --keywords "software engineer" --location "New York"
-```
-
-### Advanced Configuration
-
-```bash
-# High-performance scraping with custom settings
-cargo run -- jobs \
-  --keywords "machine learning" \
-  --location "San Francisco" \
-  --concurrent 5 \
-  --timeout 60 \
-  --retries 5 \
-  --output ml_jobs_data
-```
-
-### Environment Variables Setup
-
-```bash
-export CONCURRENT_REQUESTS=3
-export REQUEST_TIMEOUT=45
-export MAX_RETRIES=4
-cargo run -- company-profile --urls "https://www.linkedin.com/company/apple"
-```
