@@ -5,9 +5,9 @@ use scraper::{ Html, Selector, ElementRef };
 use htmlentity::entity::{ decode, ICodedDataTrait };
 use crate::{
     config::Config,
-    utils::HttpClient,
-    spiders::{ Spider, Request },
-    items::{ PersonProfile, Experience, Education, Project, Language, Activity },
+    spiders::{ Request, Spider },
+    utils::{ selector_utils::parse_selector, HttpClient },
+    items::{ Activity, Education, Experience, Language, PersonProfile, Project },
 };
 
 #[derive(Clone)]
@@ -48,70 +48,48 @@ struct CompiledSelectors {
 impl CompiledSelectors {
     fn new() -> Self {
         Self {
-            summary: Self::parse_selector(crate::selectors::PeopleSelectors::TOP_CARD_LAYOUT),
-            name: Self::parse_selector(crate::selectors::PeopleSelectors::NAME),
-            description: Self::parse_selector(crate::selectors::PeopleSelectors::DESCRIPTION),
-            location: Self::parse_selector(crate::selectors::PeopleSelectors::LOCATION),
-            followers: Self::parse_selector(crate::selectors::PeopleSelectors::FOLLOWERS),
-            connections: Self::parse_selector(crate::selectors::PeopleSelectors::CONNECTIONS),
-            subline_item: Self::parse_selector(crate::selectors::PeopleSelectors::SUBLINE_ITEM),
-            exp_item: Self::parse_selector(crate::selectors::PeopleSelectors::EXPERIENCE_ITEM),
-            exp_title: Self::parse_selector(crate::selectors::PeopleSelectors::EXPERIENCE_TITLE),
-            exp_location: Self::parse_selector(
-                crate::selectors::PeopleSelectors::EXPERIENCE_LOCATION
-            ),
-            exp_desc_more: Self::parse_selector(
+            summary: parse_selector(crate::selectors::PeopleSelectors::TOP_CARD_LAYOUT),
+            name: parse_selector(crate::selectors::PeopleSelectors::NAME),
+            description: parse_selector(crate::selectors::PeopleSelectors::DESCRIPTION),
+            location: parse_selector(crate::selectors::PeopleSelectors::LOCATION),
+            followers: parse_selector(crate::selectors::PeopleSelectors::FOLLOWERS),
+            connections: parse_selector(crate::selectors::PeopleSelectors::CONNECTIONS),
+            subline_item: parse_selector(crate::selectors::PeopleSelectors::SUBLINE_ITEM),
+            exp_item: parse_selector(crate::selectors::PeopleSelectors::EXPERIENCE_ITEM),
+            exp_title: parse_selector(crate::selectors::PeopleSelectors::EXPERIENCE_TITLE),
+            exp_location: parse_selector(crate::selectors::PeopleSelectors::EXPERIENCE_LOCATION),
+            exp_desc_more: parse_selector(
                 crate::selectors::PeopleSelectors::EXPERIENCE_DESCRIPTION_MORE
             ),
-            exp_desc_less: Self::parse_selector(
+            exp_desc_less: parse_selector(
                 crate::selectors::PeopleSelectors::EXPERIENCE_DESCRIPTION_LESS
             ),
-            exp_date_time: Self::parse_selector(
-                crate::selectors::PeopleSelectors::EXPERIENCE_DATE_TIME
-            ),
-            exp_duration: Self::parse_selector(
-                crate::selectors::PeopleSelectors::EXPERIENCE_DURATION
-            ),
-            exp_company_logo: Self::parse_selector(
+            exp_date_time: parse_selector(crate::selectors::PeopleSelectors::EXPERIENCE_DATE_TIME),
+            exp_duration: parse_selector(crate::selectors::PeopleSelectors::EXPERIENCE_DURATION),
+            exp_company_logo: parse_selector(
                 crate::selectors::PeopleSelectors::EXPERIENCE_EDUCATION_COMPANY_LOGO
             ),
-            edu_item: Self::parse_selector(crate::selectors::PeopleSelectors::EDUCATION_ITEM),
-            edu_org: Self::parse_selector(
-                crate::selectors::PeopleSelectors::EDUCATION_ORGANIZATION
-            ),
-            edu_link: Self::parse_selector(crate::selectors::PeopleSelectors::EDUCATION_LINK),
-            edu_details: Self::parse_selector(crate::selectors::PeopleSelectors::EDUCATION_DETAILS),
-            edu_desc: Self::parse_selector(
-                crate::selectors::PeopleSelectors::EDUCATION_DESCRIPTION
-            ),
-            edu_date_time: Self::parse_selector(
-                crate::selectors::PeopleSelectors::EDUCATION_DATE_TIME
-            ),
-            projects_items: Self::parse_selector(crate::selectors::PeopleSelectors::PROJECTS_ITEMS),
-            project_title: Self::parse_selector(crate::selectors::PeopleSelectors::PROJECT_TITLE),
-            project_description: Self::parse_selector(
+            edu_item: parse_selector(crate::selectors::PeopleSelectors::EDUCATION_ITEM),
+            edu_org: parse_selector(crate::selectors::PeopleSelectors::EDUCATION_ORGANIZATION),
+            edu_link: parse_selector(crate::selectors::PeopleSelectors::EDUCATION_LINK),
+            edu_details: parse_selector(crate::selectors::PeopleSelectors::EDUCATION_DETAILS),
+            edu_desc: parse_selector(crate::selectors::PeopleSelectors::EDUCATION_DESCRIPTION),
+            edu_date_time: parse_selector(crate::selectors::PeopleSelectors::EDUCATION_DATE_TIME),
+            projects_items: parse_selector(crate::selectors::PeopleSelectors::PROJECTS_ITEMS),
+            project_title: parse_selector(crate::selectors::PeopleSelectors::PROJECT_TITLE),
+            project_description: parse_selector(
                 crate::selectors::PeopleSelectors::PROJECT_DESCRIPTION
             ),
-            project_link: Self::parse_selector(crate::selectors::PeopleSelectors::PROJECT_LINK),
-            languages_items: Self::parse_selector(
-                crate::selectors::PeopleSelectors::LANGUAGES_ITEMS
-            ),
-            language_name: Self::parse_selector(crate::selectors::PeopleSelectors::LANGUAGE_NAME),
-            language_proficiency: Self::parse_selector(
+            project_link: parse_selector(crate::selectors::PeopleSelectors::PROJECT_LINK),
+            languages_items: parse_selector(crate::selectors::PeopleSelectors::LANGUAGES_ITEMS),
+            language_name: parse_selector(crate::selectors::PeopleSelectors::LANGUAGE_NAME),
+            language_proficiency: parse_selector(
                 crate::selectors::PeopleSelectors::LANGUAGE_PROFICIENCY
             ),
-            activities_items: Self::parse_selector(
-                crate::selectors::PeopleSelectors::ACTIVITIES_ITEMS
-            ),
-            activity_title: Self::parse_selector(crate::selectors::PeopleSelectors::ACTIVITY_TITLE),
-            activity_link: Self::parse_selector(crate::selectors::PeopleSelectors::ACTIVITY_LINK),
+            activities_items: parse_selector(crate::selectors::PeopleSelectors::ACTIVITIES_ITEMS),
+            activity_title: parse_selector(crate::selectors::PeopleSelectors::ACTIVITY_TITLE),
+            activity_link: parse_selector(crate::selectors::PeopleSelectors::ACTIVITY_LINK),
         }
-    }
-
-    fn parse_selector(selector_str: &str) -> Selector {
-        Selector::parse(selector_str).unwrap_or_else(|_|
-            panic!("Invalid CSS selector: {selector_str}")
-        )
     }
 }
 

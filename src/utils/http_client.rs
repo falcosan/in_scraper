@@ -52,7 +52,7 @@ impl HttpClient {
         self.execute_with_retry(||
             self.client
                 .get(
-                    format!("https://proxy.scrapeops.io/v1/?api_key=1a816100-42cc-4945-870a-6a82f2a88674&url={}", url)
+                    format!("https://proxy.scrapeops.io/v1/?api_key=1a816100-42cc-4945-870a-6a82f2a88674&url={url}")
                 )
                 // .header("cookie", &cookie_header)
                 // .header("referer", "https://www.linkedin.com/feed/")

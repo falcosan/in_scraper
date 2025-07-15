@@ -8,8 +8,6 @@ impl PeopleSelectors {
     pub const FOLLOWERS: &'static str = ".not-first-middot span:first-child";
     pub const CONNECTIONS: &'static str = ".not-first-middot span:last-child";
     pub const SUBLINE_ITEM: &'static str = "span.top-card__subline-item";
-    pub const EXPERIENCE_EDUCATION_COMPANY_LOGO: &'static str =
-        "li.profile-section-card img.profile-section-card__image";
     pub const PROJECTS_ITEMS: &'static str =
         "section[data-section='projects'] ul > li.personal-project";
     pub const PROJECT_TITLE: &'static str = "h3";
@@ -23,15 +21,16 @@ impl PeopleSelectors {
         "section[data-section='posts'] ul[data-test-id='activities__list'] > li";
     pub const ACTIVITY_TITLE: &'static str = "h3.base-main-card__title";
     pub const ACTIVITY_LINK: &'static str = "a.base-card__full-link";
-    pub const EXPERIENCE_ITEM: &'static str =
-        "section.experience-education li.profile-section-card";
+    pub const EXPERIENCE_ITEM: &'static str = "li.profile-section-card";
+    pub const EXPERIENCE_EDUCATION_COMPANY_LOGO: &'static str =
+        "li.profile-section-card img.profile-section-card__image";
     pub const EXPERIENCE_TITLE: &'static str = "h4 > p:first-child";
     pub const EXPERIENCE_LOCATION: &'static str = "div.text-color-text-low-emphasis";
     pub const EXPERIENCE_DESCRIPTION_MORE: &'static str = "p.show-more-less-text__text--more";
     pub const EXPERIENCE_DESCRIPTION_LESS: &'static str = "p.show-more-less-text__text--less";
     pub const EXPERIENCE_DATE_TIME: &'static str = "span.date-range time";
     pub const EXPERIENCE_DURATION: &'static str = "span.date-range__duration";
-    pub const EDUCATION_ITEM: &'static str = "section.experience-education li.profile-section-card";
+    pub const EDUCATION_ITEM: &'static str = "li.profile-section-card";
     pub const EDUCATION_ORGANIZATION: &'static str = "h3";
     pub const EDUCATION_LINK: &'static str = "a";
     pub const EDUCATION_DETAILS: &'static str = "h4 > p:first-child";
