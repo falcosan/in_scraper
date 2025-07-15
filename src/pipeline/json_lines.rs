@@ -28,7 +28,7 @@ impl JsonLinesPipeline {
         let mut handles = self.file_handles.lock().await;
 
         let (file, _) = handles.entry(spider_name.to_string()).or_insert_with(|| {
-            let timestamp = Local::now().format("%d_%Y%m%H%M%S");
+            let timestamp = Local::now().format("%d_%m_%Y_%H:%M:%S");
             let filename = format!("{spider_name}_{timestamp}.jsonl");
             let filepath = output_dir.join(&filename);
 
