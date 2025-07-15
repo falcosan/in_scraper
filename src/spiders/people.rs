@@ -14,8 +14,6 @@ pub struct PeopleProfileSpider {
     config: Arc<Config>,
     http_client: HttpClient,
     profiles: Vec<String>,
-
-    // Top card selectors
     summary_selector: Selector,
     name_selector: Selector,
     description_selector: Selector,
@@ -23,13 +21,9 @@ pub struct PeopleProfileSpider {
     followers_selector: Selector,
     connections_selector: Selector,
     subline_item_selector: Selector,
-
-    // About section selectors
     about_selector: Selector,
     about_section_selector: Selector,
     about_text_selector: Selector,
-
-    // Experience selectors
     exp_item_selector: Selector,
     exp_title_selector: Selector,
     exp_location_selector: Selector,
@@ -39,30 +33,22 @@ pub struct PeopleProfileSpider {
     exp_duration_selector: Selector,
     exp_company_logo_selector: Selector,
     exp_company_name_selector: Selector,
-
-    // Education selectors
     edu_item_selector: Selector,
     edu_org_selector: Selector,
     edu_link_selector: Selector,
     edu_details_selector: Selector,
     edu_desc_selector: Selector,
     edu_date_time_selector: Selector,
-
-    // Section selectors
     projects_section_selector: Selector,
     projects_items_selector: Selector,
     languages_section_selector: Selector,
     languages_items_selector: Selector,
     activities_section_selector: Selector,
     activities_items_selector: Selector,
-
-    // Experience/Education combined selectors
     exp_edu_section_selector: Selector,
     exp_edu_items_selector: Selector,
     exp_edu_title_selector: Selector,
     exp_edu_details_selector: Selector,
-
-    // Core section selectors
     core_section_container_selector: Selector,
     core_section_title_selector: Selector,
     core_section_content_selector: Selector,
@@ -75,8 +61,6 @@ impl PeopleProfileSpider {
             config,
             http_client,
             profiles,
-
-            // Top card selectors
             summary_selector: Selector::parse(
                 crate::selectors::PeopleSelectors::TOP_CARD_LAYOUT
             ).unwrap(),
@@ -96,8 +80,6 @@ impl PeopleProfileSpider {
             subline_item_selector: Selector::parse(
                 crate::selectors::PeopleSelectors::SUBLINE_ITEM
             ).unwrap(),
-
-            // About section selectors
             about_selector: Selector::parse(crate::selectors::PeopleSelectors::ABOUT).unwrap(),
             about_section_selector: Selector::parse(
                 crate::selectors::PeopleSelectors::ABOUT_SECTION
@@ -105,8 +87,6 @@ impl PeopleProfileSpider {
             about_text_selector: Selector::parse(
                 crate::selectors::PeopleSelectors::ABOUT_TEXT
             ).unwrap(),
-
-            // Experience selectors
             exp_item_selector: Selector::parse(
                 crate::selectors::PeopleSelectors::EXPERIENCE_ITEM
             ).unwrap(),
@@ -134,8 +114,6 @@ impl PeopleProfileSpider {
             exp_company_name_selector: Selector::parse(
                 crate::selectors::PeopleSelectors::EXPERIENCE_EDUCATION_COMPANY_NAME
             ).unwrap(),
-
-            // Education selectors
             edu_item_selector: Selector::parse(
                 crate::selectors::PeopleSelectors::EDUCATION_ITEM
             ).unwrap(),
@@ -154,8 +132,6 @@ impl PeopleProfileSpider {
             edu_date_time_selector: Selector::parse(
                 crate::selectors::PeopleSelectors::EDUCATION_DATE_TIME
             ).unwrap(),
-
-            // Section selectors
             projects_section_selector: Selector::parse(
                 crate::selectors::PeopleSelectors::PROJECTS_SECTION
             ).unwrap(),
@@ -174,8 +150,6 @@ impl PeopleProfileSpider {
             activities_items_selector: Selector::parse(
                 crate::selectors::PeopleSelectors::ACTIVITIES_ITEMS
             ).unwrap(),
-
-            // Experience/Education combined selectors
             exp_edu_section_selector: Selector::parse(
                 crate::selectors::PeopleSelectors::EXPERIENCE_EDUCATION_SECTION
             ).unwrap(),
@@ -188,8 +162,6 @@ impl PeopleProfileSpider {
             exp_edu_details_selector: Selector::parse(
                 crate::selectors::PeopleSelectors::EXPERIENCE_EDUCATION_DETAILS
             ).unwrap(),
-
-            // Core section selectors
             core_section_container_selector: Selector::parse(
                 crate::selectors::PeopleSelectors::CORE_SECTION_CONTAINER
             ).unwrap(),
@@ -346,14 +318,12 @@ impl PeopleProfileSpider {
     }
 
     fn parse_about(&self, document: &Html) -> Option<String> {
-        // Try the specific about section selector first
         if let Some(about_section) = document.select(&self.about_section_selector).next() {
             if let Some(about_text) = Self::extract_text(about_section, &self.about_text_selector) {
                 return Some(about_text);
             }
         }
 
-        // Fallback to the general about selector
         document
             .select(&self.about_selector)
             .next()
@@ -368,7 +338,6 @@ impl PeopleProfileSpider {
         let mut followers = Self::extract_text(summary_box, &self.followers_selector);
         let mut connections = Self::extract_text(summary_box, &self.connections_selector);
 
-        // Fallback to subline items when dedicated selectors return nothing
         if location.is_none() || followers.is_none() || connections.is_none() {
             let subline_items: Vec<_> = summary_box
                 .select(&self.subline_item_selector)
