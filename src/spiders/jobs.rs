@@ -3,7 +3,8 @@ use anyhow::Result;
 use std::sync::Arc;
 use urlencoding::encode;
 use async_trait::async_trait;
-use scraper::{ Html, Selector };
+use std::collections::HashSet;
+use scraper::{ Html, Selector, ElementRef };
 use crate::{ config::Config, items::JobListing, spiders::{ Spider, Request }, utils::HttpClient };
 
 #[derive(Clone)]
@@ -33,6 +34,27 @@ impl JobsSpider {
             start
         )
     }
+
+    fn truncate_url_params<'a>(&self, url: &'a str) -> &'a str {
+        if let Some(pos) = url.find('?') { &url[..pos] } else { url }
+    }
+
+    fn extract_text(element: ElementRef, selector: &Selector) -> String {
+        element
+            .select(selector)
+            .next()
+            .map(|el| el.text().collect::<String>().trim().to_string())
+            .unwrap_or_else(|| "not-found".to_string())
+    }
+
+    fn extract_href(element: ElementRef, selector: &Selector) -> String {
+        element
+            .select(selector)
+            .next()
+            .and_then(|el| el.value().attr("href"))
+            .unwrap_or("not-found")
+            .to_string()
+    }
 }
 
 #[async_trait]
@@ -52,7 +74,7 @@ impl Spider for JobsSpider {
     }
 
     async fn start_requests(&self) -> Vec<Request> {
-        vec![Request::new(self.build_url(0)).with_meta("page".to_string(), "0".to_string())]
+        vec![Request::new(self.build_url(0)).with_meta("start".to_string(), "0".to_string())]
     }
 
     async fn parse(
@@ -60,8 +82,8 @@ impl Spider for JobsSpider {
         response: String,
         request: &Request
     ) -> Result<(Vec<Self::Item>, Vec<Request>)> {
-        let page = request.meta
-            .get("page")
+        let start_offset = request.meta
+            .get("start")
             .and_then(|s| s.parse::<usize>().ok())
             .unwrap_or(0);
         let document = Html::parse_document(&response);
@@ -75,63 +97,40 @@ impl Spider for JobsSpider {
         ).unwrap();
         let location_selector = Selector::parse(crate::selectors::JobSelectors::LOCATION).unwrap();
 
-        let jobs: Vec<_> = document.select(&job_selector).collect();
-        info!("Number of jobs returned: {}", jobs.len());
-
         let mut items = Vec::new();
-        for job in &jobs {
-            let job_title = job
-                .select(&title_selector)
-                .next()
-                .map(|el| el.text().collect::<String>().trim().to_string())
-                .unwrap_or_else(|| "not-found".to_string());
+        let mut seen_urls = HashSet::new();
 
-            let job_detail_url = job
-                .select(&url_selector)
-                .next()
-                .and_then(|el| el.value().attr("href"))
-                .unwrap_or("not-found")
-                .to_string();
+        let jobs: Vec<_> = document.select(&job_selector).collect();
+        info!("Jobs found on page: {}", jobs.len());
 
-            let job_listed = job
-                .select(&time_selector)
-                .next()
-                .map(|el| el.text().collect::<String>().trim().to_string())
-                .unwrap_or_else(|| "not-found".to_string());
+        for job in jobs.iter() {
+            let raw_url = Self::extract_href(*job, &url_selector);
+            let truncated_url = self.truncate_url_params(&raw_url).to_string();
 
-            let company_element = job.select(&company_name_selector).next();
-            let company_name = company_element
-                .map(|el| el.text().collect::<String>().trim().to_string())
-                .unwrap_or_else(|| "not-found".to_string());
-
-            let company_link = company_element
-                .and_then(|el| el.value().attr("href"))
-                .unwrap_or("not-found")
-                .to_string();
-
-            let company_location = job
-                .select(&location_selector)
-                .next()
-                .map(|el| el.text().collect::<String>().trim().to_string())
-                .unwrap_or_else(|| "not-found".to_string());
+            if truncated_url == "not-found" || !seen_urls.insert(truncated_url.clone()) {
+                continue;
+            }
 
             items.push(JobListing {
-                job_title,
-                job_detail_url,
-                job_listed,
-                company_name,
-                company_link,
-                company_location,
+                job_detail_url: truncated_url,
+                job_title: Self::extract_text(*job, &title_selector),
+                job_listed: Self::extract_text(*job, &time_selector),
+                company_name: Self::extract_text(*job, &company_name_selector),
+                company_link: Self::extract_href(*job, &company_name_selector),
+                company_location: Self::extract_text(*job, &location_selector),
             });
         }
 
+        info!("Unique jobs collected: {}", items.len());
+
         let mut next_requests = Vec::new();
         if !jobs.is_empty() {
-            let next_page = page + 1;
+            let next_start = start_offset + jobs.len();
+            info!("Requesting next page with start offset: {}", next_start);
             next_requests.push(
-                Request::new(self.build_url(next_page)).with_meta(
-                    "page".to_string(),
-                    next_page.to_string()
+                Request::new(self.build_url(next_start)).with_meta(
+                    "start".to_string(),
+                    next_start.to_string()
                 )
             );
         }
