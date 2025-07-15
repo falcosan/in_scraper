@@ -10,48 +10,108 @@ use crate::{
 };
 
 #[derive(Clone)]
+struct CompiledSelectors {
+    summary: Selector,
+    name: Selector,
+    description: Selector,
+    location: Selector,
+    followers: Selector,
+    connections: Selector,
+    subline_item: Selector,
+    about: Selector,
+    about_section: Selector,
+    about_text: Selector,
+    exp_item: Selector,
+    exp_title: Selector,
+    exp_location: Selector,
+    exp_desc_more: Selector,
+    exp_desc_less: Selector,
+    exp_date_time: Selector,
+    exp_duration: Selector,
+    exp_company_logo: Selector,
+    exp_company_name: Selector,
+    edu_item: Selector,
+    edu_org: Selector,
+    edu_link: Selector,
+    edu_details: Selector,
+    edu_desc: Selector,
+    edu_date_time: Selector,
+    projects_items: Selector,
+    languages_items: Selector,
+    activities_items: Selector,
+}
+
+impl CompiledSelectors {
+    fn new() -> Self {
+        Self {
+            summary: Self::parse_selector(crate::selectors::PeopleSelectors::TOP_CARD_LAYOUT),
+            name: Self::parse_selector(crate::selectors::PeopleSelectors::NAME),
+            description: Self::parse_selector(crate::selectors::PeopleSelectors::DESCRIPTION),
+            location: Self::parse_selector(crate::selectors::PeopleSelectors::LOCATION),
+            followers: Self::parse_selector(crate::selectors::PeopleSelectors::FOLLOWERS),
+            connections: Self::parse_selector(crate::selectors::PeopleSelectors::CONNECTIONS),
+            subline_item: Self::parse_selector(crate::selectors::PeopleSelectors::SUBLINE_ITEM),
+            about: Self::parse_selector(crate::selectors::PeopleSelectors::ABOUT),
+            about_section: Self::parse_selector(crate::selectors::PeopleSelectors::ABOUT_SECTION),
+            about_text: Self::parse_selector(crate::selectors::PeopleSelectors::ABOUT_TEXT),
+            exp_item: Self::parse_selector(crate::selectors::PeopleSelectors::EXPERIENCE_ITEM),
+            exp_title: Self::parse_selector(crate::selectors::PeopleSelectors::EXPERIENCE_TITLE),
+            exp_location: Self::parse_selector(
+                crate::selectors::PeopleSelectors::EXPERIENCE_LOCATION
+            ),
+            exp_desc_more: Self::parse_selector(
+                crate::selectors::PeopleSelectors::EXPERIENCE_DESCRIPTION_MORE
+            ),
+            exp_desc_less: Self::parse_selector(
+                crate::selectors::PeopleSelectors::EXPERIENCE_DESCRIPTION_LESS
+            ),
+            exp_date_time: Self::parse_selector(
+                crate::selectors::PeopleSelectors::EXPERIENCE_DATE_TIME
+            ),
+            exp_duration: Self::parse_selector(
+                crate::selectors::PeopleSelectors::EXPERIENCE_DURATION
+            ),
+            exp_company_logo: Self::parse_selector(
+                crate::selectors::PeopleSelectors::EXPERIENCE_EDUCATION_COMPANY_LOGO
+            ),
+            exp_company_name: Self::parse_selector(
+                crate::selectors::PeopleSelectors::EXPERIENCE_EDUCATION_COMPANY_NAME
+            ),
+            edu_item: Self::parse_selector(crate::selectors::PeopleSelectors::EDUCATION_ITEM),
+            edu_org: Self::parse_selector(
+                crate::selectors::PeopleSelectors::EDUCATION_ORGANIZATION
+            ),
+            edu_link: Self::parse_selector(crate::selectors::PeopleSelectors::EDUCATION_LINK),
+            edu_details: Self::parse_selector(crate::selectors::PeopleSelectors::EDUCATION_DETAILS),
+            edu_desc: Self::parse_selector(
+                crate::selectors::PeopleSelectors::EDUCATION_DESCRIPTION
+            ),
+            edu_date_time: Self::parse_selector(
+                crate::selectors::PeopleSelectors::EDUCATION_DATE_TIME
+            ),
+            projects_items: Self::parse_selector(crate::selectors::PeopleSelectors::PROJECTS_ITEMS),
+            languages_items: Self::parse_selector(
+                crate::selectors::PeopleSelectors::LANGUAGES_ITEMS
+            ),
+            activities_items: Self::parse_selector(
+                crate::selectors::PeopleSelectors::ACTIVITIES_ITEMS
+            ),
+        }
+    }
+
+    fn parse_selector(selector_str: &str) -> Selector {
+        Selector::parse(selector_str).unwrap_or_else(|_|
+            panic!("Invalid CSS selector: {selector_str}")
+        )
+    }
+}
+
+#[derive(Clone)]
 pub struct PeopleProfileSpider {
     config: Arc<Config>,
     http_client: HttpClient,
     profiles: Vec<String>,
-    summary_selector: Selector,
-    name_selector: Selector,
-    description_selector: Selector,
-    location_selector: Selector,
-    followers_selector: Selector,
-    connections_selector: Selector,
-    subline_item_selector: Selector,
-    about_selector: Selector,
-    about_section_selector: Selector,
-    about_text_selector: Selector,
-    exp_item_selector: Selector,
-    exp_title_selector: Selector,
-    exp_location_selector: Selector,
-    exp_desc_more_selector: Selector,
-    exp_desc_less_selector: Selector,
-    exp_date_time_selector: Selector,
-    exp_duration_selector: Selector,
-    exp_company_logo_selector: Selector,
-    exp_company_name_selector: Selector,
-    edu_item_selector: Selector,
-    edu_org_selector: Selector,
-    edu_link_selector: Selector,
-    edu_details_selector: Selector,
-    edu_desc_selector: Selector,
-    edu_date_time_selector: Selector,
-    projects_section_selector: Selector,
-    projects_items_selector: Selector,
-    languages_section_selector: Selector,
-    languages_items_selector: Selector,
-    activities_section_selector: Selector,
-    activities_items_selector: Selector,
-    exp_edu_section_selector: Selector,
-    exp_edu_items_selector: Selector,
-    exp_edu_title_selector: Selector,
-    exp_edu_details_selector: Selector,
-    core_section_container_selector: Selector,
-    core_section_title_selector: Selector,
-    core_section_content_selector: Selector,
+    selectors: CompiledSelectors,
 }
 
 impl PeopleProfileSpider {
@@ -61,116 +121,7 @@ impl PeopleProfileSpider {
             config,
             http_client,
             profiles,
-            summary_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::TOP_CARD_LAYOUT
-            ).unwrap(),
-            name_selector: Selector::parse(crate::selectors::PeopleSelectors::NAME).unwrap(),
-            description_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::DESCRIPTION
-            ).unwrap(),
-            location_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::LOCATION
-            ).unwrap(),
-            followers_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::FOLLOWERS
-            ).unwrap(),
-            connections_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::CONNECTIONS
-            ).unwrap(),
-            subline_item_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::SUBLINE_ITEM
-            ).unwrap(),
-            about_selector: Selector::parse(crate::selectors::PeopleSelectors::ABOUT).unwrap(),
-            about_section_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::ABOUT_SECTION
-            ).unwrap(),
-            about_text_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::ABOUT_TEXT
-            ).unwrap(),
-            exp_item_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::EXPERIENCE_ITEM
-            ).unwrap(),
-            exp_title_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::EXPERIENCE_TITLE
-            ).unwrap(),
-            exp_location_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::EXPERIENCE_LOCATION
-            ).unwrap(),
-            exp_desc_more_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::EXPERIENCE_DESCRIPTION_MORE
-            ).unwrap(),
-            exp_desc_less_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::EXPERIENCE_DESCRIPTION_LESS
-            ).unwrap(),
-            exp_date_time_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::EXPERIENCE_DATE_TIME
-            ).unwrap(),
-            exp_duration_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::EXPERIENCE_DURATION
-            ).unwrap(),
-            exp_company_logo_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::EXPERIENCE_EDUCATION_COMPANY_LOGO
-            ).unwrap(),
-            exp_company_name_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::EXPERIENCE_EDUCATION_COMPANY_NAME
-            ).unwrap(),
-            edu_item_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::EDUCATION_ITEM
-            ).unwrap(),
-            edu_org_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::EDUCATION_ORGANIZATION
-            ).unwrap(),
-            edu_link_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::EDUCATION_LINK
-            ).unwrap(),
-            edu_details_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::EDUCATION_DETAILS
-            ).unwrap(),
-            edu_desc_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::EDUCATION_DESCRIPTION
-            ).unwrap(),
-            edu_date_time_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::EDUCATION_DATE_TIME
-            ).unwrap(),
-            projects_section_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::PROJECTS_SECTION
-            ).unwrap(),
-            projects_items_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::PROJECTS_ITEMS
-            ).unwrap(),
-            languages_section_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::LANGUAGES_SECTION
-            ).unwrap(),
-            languages_items_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::LANGUAGES_ITEMS
-            ).unwrap(),
-            activities_section_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::ACTIVITIES_SECTION
-            ).unwrap(),
-            activities_items_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::ACTIVITIES_ITEMS
-            ).unwrap(),
-            exp_edu_section_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::EXPERIENCE_EDUCATION_SECTION
-            ).unwrap(),
-            exp_edu_items_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::EXPERIENCE_EDUCATION_ITEMS
-            ).unwrap(),
-            exp_edu_title_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::EXPERIENCE_EDUCATION_TITLE
-            ).unwrap(),
-            exp_edu_details_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::EXPERIENCE_EDUCATION_DETAILS
-            ).unwrap(),
-            core_section_container_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::CORE_SECTION_CONTAINER
-            ).unwrap(),
-            core_section_title_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::CORE_SECTION_TITLE
-            ).unwrap(),
-            core_section_content_selector: Selector::parse(
-                crate::selectors::PeopleSelectors::CORE_SECTION_CONTENT
-            ).unwrap(),
+            selectors: CompiledSelectors::new(),
         }
     }
 
@@ -183,46 +134,55 @@ impl PeopleProfileSpider {
             .select(selector)
             .next()
             .map(|el| el.text().collect::<String>().trim().to_string())
+            .filter(|text| !text.is_empty())
     }
 
     fn truncate_url(url: &str) -> String {
         url.split('?').next().unwrap_or(url).to_string()
     }
 
+    fn parse_date_range(date_ranges: &[String]) -> (Option<String>, Option<String>) {
+        match date_ranges.len() {
+            2 => (Some(date_ranges[0].clone()), Some(date_ranges[1].clone())),
+            1 => (Some(date_ranges[0].clone()), Some("present".to_string())),
+            _ => (None, None),
+        }
+    }
+
+    fn extract_date_ranges(element: ElementRef, selector: &Selector) -> Vec<String> {
+        element
+            .select(selector)
+            .map(|el| el.text().collect::<String>().trim().to_string())
+            .filter(|text| !text.is_empty())
+            .collect()
+    }
+
     fn parse_experience(&self, document: &Html) -> Vec<Experience> {
         document
-            .select(&self.exp_item_selector)
+            .select(&self.selectors.exp_item)
             .map(|block| {
-                let date_ranges: Vec<_> = block
-                    .select(&self.exp_date_time_selector)
-                    .map(|el| el.text().collect::<String>())
-                    .collect();
-
-                let (start_time, end_time) = match date_ranges.len() {
-                    2 => (Some(date_ranges[0].clone()), Some(date_ranges[1].clone())),
-                    1 => (Some(date_ranges[0].clone()), Some("present".to_string())),
-                    _ => (None, None),
-                };
+                let date_ranges = Self::extract_date_ranges(block, &self.selectors.exp_date_time);
+                let (start_time, end_time) = Self::parse_date_range(&date_ranges);
 
                 Experience {
                     organization_profile: block
-                        .select(&self.exp_title_selector)
+                        .select(&self.selectors.exp_title)
                         .next()
                         .and_then(|el| el.value().attr("href"))
                         .map(Self::truncate_url),
-                    location: Self::extract_text(block, &self.exp_location_selector),
-                    description: Self::extract_text(block, &self.exp_desc_more_selector).or_else(||
-                        Self::extract_text(block, &self.exp_desc_less_selector)
+                    location: Self::extract_text(block, &self.selectors.exp_location),
+                    description: Self::extract_text(block, &self.selectors.exp_desc_more).or_else(||
+                        Self::extract_text(block, &self.selectors.exp_desc_less)
                     ),
-                    duration: Self::extract_text(block, &self.exp_duration_selector),
+                    duration: Self::extract_text(block, &self.selectors.exp_duration),
                     start_time,
                     end_time,
                     logo: block
-                        .select(&self.exp_company_logo_selector)
+                        .select(&self.selectors.exp_company_logo)
                         .next()
                         .and_then(|el| el.value().attr("src"))
-                        .map(|s| s.to_string()),
-                    title: Self::extract_text(block, &self.exp_title_selector),
+                        .map(String::from),
+                    title: Self::extract_text(block, &self.selectors.exp_title),
                 }
             })
             .collect()
@@ -230,32 +190,25 @@ impl PeopleProfileSpider {
 
     fn parse_education(&self, document: &Html) -> Vec<Education> {
         document
-            .select(&self.edu_item_selector)
+            .select(&self.selectors.edu_item)
             .map(|block| {
                 let course_details = block
-                    .select(&self.edu_details_selector)
+                    .select(&self.selectors.edu_details)
                     .map(|el| el.text().collect::<String>().trim().to_string())
+                    .filter(|text| !text.is_empty())
                     .collect::<Vec<_>>()
                     .join(" ");
 
-                let date_ranges: Vec<_> = block
-                    .select(&self.edu_date_time_selector)
-                    .map(|el| el.text().collect::<String>())
-                    .collect();
-
-                let (start_time, end_time) = match date_ranges.len() {
-                    2 => (Some(date_ranges[0].clone()), Some(date_ranges[1].clone())),
-                    1 => (Some(date_ranges[0].clone()), Some("present".to_string())),
-                    _ => (None, None),
-                };
+                let date_ranges = Self::extract_date_ranges(block, &self.selectors.edu_date_time);
+                let (start_time, end_time) = Self::parse_date_range(&date_ranges);
 
                 Education {
                     organization: Self::extract_text(
                         block,
-                        &self.edu_org_selector
+                        &self.selectors.edu_org
                     ).unwrap_or_default(),
                     organization_profile: block
-                        .select(&self.edu_link_selector)
+                        .select(&self.selectors.edu_link)
                         .next()
                         .and_then(|el| el.value().attr("href"))
                         .map(Self::truncate_url),
@@ -264,7 +217,7 @@ impl PeopleProfileSpider {
                     } else {
                         Some(course_details)
                     },
-                    description: Self::extract_text(block, &self.edu_desc_selector),
+                    description: Self::extract_text(block, &self.selectors.edu_desc),
                     start_time,
                     end_time,
                 }
@@ -274,74 +227,70 @@ impl PeopleProfileSpider {
 
     fn parse_projects(&self, document: &Html) -> Vec<Project> {
         document
-            .select(&self.projects_items_selector)
-            .map(|block| {
-                Project {
-                    name: Self::extract_text(block, &self.exp_title_selector),
-                    description: Self::extract_text(block, &self.exp_desc_less_selector),
-                    url: block
-                        .select(&self.edu_link_selector)
-                        .next()
-                        .and_then(|el| el.value().attr("href"))
-                        .map(Self::truncate_url),
-                }
+            .select(&self.selectors.projects_items)
+            .map(|block| Project {
+                name: Self::extract_text(block, &self.selectors.exp_title),
+                description: Self::extract_text(block, &self.selectors.exp_desc_less),
+                url: block
+                    .select(&self.selectors.edu_link)
+                    .next()
+                    .and_then(|el| el.value().attr("href"))
+                    .map(Self::truncate_url),
             })
             .collect()
     }
 
     fn parse_languages(&self, document: &Html) -> Vec<Language> {
         document
-            .select(&self.languages_items_selector)
-            .map(|block| {
-                Language {
-                    name: Self::extract_text(block, &self.exp_company_name_selector),
-                    proficiency: Self::extract_text(block, &self.exp_desc_less_selector),
-                }
+            .select(&self.selectors.languages_items)
+            .map(|block| Language {
+                name: Self::extract_text(block, &self.selectors.exp_company_name),
+                proficiency: Self::extract_text(block, &self.selectors.exp_desc_less),
             })
             .collect()
     }
 
     fn parse_activities(&self, document: &Html) -> Vec<Activity> {
         document
-            .select(&self.activities_items_selector)
-            .map(|block| {
-                Activity {
-                    title: Self::extract_text(block, &self.exp_title_selector),
-                    url: block
-                        .select(&self.edu_link_selector)
-                        .next()
-                        .and_then(|el| el.value().attr("href"))
-                        .map(Self::truncate_url),
-                }
+            .select(&self.selectors.activities_items)
+            .map(|block| Activity {
+                title: Self::extract_text(block, &self.selectors.exp_title),
+                url: block
+                    .select(&self.selectors.edu_link)
+                    .next()
+                    .and_then(|el| el.value().attr("href"))
+                    .map(Self::truncate_url),
             })
             .collect()
     }
 
     fn parse_about(&self, document: &Html) -> Option<String> {
-        if let Some(about_section) = document.select(&self.about_section_selector).next() {
-            if let Some(about_text) = Self::extract_text(about_section, &self.about_text_selector) {
+        if let Some(about_section) = document.select(&self.selectors.about_section).next() {
+            if let Some(about_text) = Self::extract_text(about_section, &self.selectors.about_text) {
                 return Some(about_text);
             }
         }
 
         document
-            .select(&self.about_selector)
+            .select(&self.selectors.about)
             .next()
-            .map(|el| el.text().collect())
+            .map(|el| el.text().collect::<String>().trim().to_string())
+            .filter(|text| !text.is_empty())
     }
 
     fn extract_location_followers_connections(
         &self,
         summary_box: ElementRef
     ) -> (Option<String>, Option<String>, Option<String>) {
-        let mut location = Self::extract_text(summary_box, &self.location_selector);
-        let mut followers = Self::extract_text(summary_box, &self.followers_selector);
-        let mut connections = Self::extract_text(summary_box, &self.connections_selector);
+        let mut location = Self::extract_text(summary_box, &self.selectors.location);
+        let mut followers = Self::extract_text(summary_box, &self.selectors.followers);
+        let mut connections = Self::extract_text(summary_box, &self.selectors.connections);
 
         if location.is_none() || followers.is_none() || connections.is_none() {
-            let subline_items: Vec<_> = summary_box
-                .select(&self.subline_item_selector)
+            let subline_items: Vec<String> = summary_box
+                .select(&self.selectors.subline_item)
                 .map(|el| el.text().collect::<String>().trim().to_string())
+                .filter(|text| !text.is_empty())
                 .collect();
 
             for item in subline_items {
@@ -392,11 +341,18 @@ impl Spider for PeopleProfileSpider {
         response: String,
         request: &Request
     ) -> Result<(Vec<Self::Item>, Vec<Request>)> {
-        let profile = request.meta.get("profile").cloned().unwrap_or_default();
-        let url = request.meta.get("linkedin_url").cloned().unwrap_or_default();
+        let profile = request.meta
+            .get("profile")
+            .cloned()
+            .unwrap_or_else(|| "unknown".to_string());
+        let url = request.meta
+            .get("linkedin_url")
+            .cloned()
+            .unwrap_or_else(|| "unknown".to_string());
+
         let document = Html::parse_document(&response);
 
-        let summary_box = document.select(&self.summary_selector).next();
+        let summary_box = document.select(&self.selectors.summary).next();
         let (location, followers, connections) = if let Some(box_el) = summary_box {
             self.extract_location_followers_connections(box_el)
         } else {
@@ -407,10 +363,10 @@ impl Spider for PeopleProfileSpider {
             profile,
             url,
             name: summary_box
-                .and_then(|el| Self::extract_text(el, &self.name_selector))
+                .and_then(|el| Self::extract_text(el, &self.selectors.name))
                 .unwrap_or_default(),
             description: summary_box
-                .and_then(|el| Self::extract_text(el, &self.description_selector))
+                .and_then(|el| Self::extract_text(el, &self.selectors.description))
                 .unwrap_or_default(),
             about: self.parse_about(&document),
             experience: self.parse_experience(&document),
