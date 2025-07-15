@@ -93,7 +93,7 @@ impl PeopleProfileSpider {
     }
 
     fn build_url(&self, profile: &str) -> String {
-        format!("https://www.linkedin.com/in/{}/", profile)
+        format!("https://www.linkedin.com/in/{profile}/")
     }
 
     fn extract_text(element: ElementRef, selector: &Selector) -> Option<String> {
