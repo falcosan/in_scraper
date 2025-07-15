@@ -20,12 +20,26 @@ pub struct CompanyProfileSpider {
 impl CompanyProfileSpider {
     pub fn new(config: Arc<Config>, company_pages: Vec<String>) -> Self {
         let http_client = HttpClient::new(config.clone()).expect("Failed to create HTTP client");
-
         Self {
             config,
             http_client,
             company_pages,
         }
+    }
+
+    fn extract_detail_text(
+        &self,
+        details: &[scraper::ElementRef],
+        index: usize,
+        text_selector: &Selector
+    ) -> Option<String> {
+        details.get(index).and_then(|detail| {
+            let texts: Vec<String> = detail
+                .select(text_selector)
+                .map(|el| el.text().collect::<String>().trim().to_string())
+                .collect();
+            texts.get(1).cloned()
+        })
     }
 }
 
@@ -64,12 +78,9 @@ impl Spider for CompanyProfileSpider {
             .get("company_index")
             .and_then(|s| s.parse::<usize>().ok())
             .unwrap_or(0);
-
         info!("Scraping page {} of {}", company_index + 1, self.company_pages.len());
 
         let document = Html::parse_document(&response);
-        let mut items = Vec::new();
-
         let name_selector = Selector::parse(crate::selectors::CompanySelectors::NAME).unwrap();
         let summary_selector = Selector::parse(
             crate::selectors::CompanySelectors::SUMMARY
@@ -77,6 +88,7 @@ impl Spider for CompanyProfileSpider {
         let details_selector = Selector::parse(
             crate::selectors::CompanySelectors::DETAILS
         ).unwrap();
+        let text_selector = Selector::parse(crate::selectors::CompanySelectors::TEXT_MD).unwrap();
 
         let name = document
             .select(&name_selector)
@@ -92,54 +104,14 @@ impl Spider for CompanyProfileSpider {
 
         let details: Vec<_> = document.select(&details_selector).collect();
 
-        let mut company = CompanyProfile {
+        let company = CompanyProfile {
             name,
             summary,
-            industry: None,
-            size: None,
-            founded: None,
+            industry: self.extract_detail_text(&details, 1, &text_selector),
+            size: self.extract_detail_text(&details, 2, &text_selector),
+            founded: self.extract_detail_text(&details, 5, &text_selector),
         };
 
-        if details.len() > 1 {
-            let text_selector = Selector::parse(
-                crate::selectors::CompanySelectors::TEXT_MD
-            ).unwrap();
-            let industry_texts: Vec<_> = details[1]
-                .select(&text_selector)
-                .map(|el| el.text().collect::<String>().trim().to_string())
-                .collect();
-            if industry_texts.len() > 1 {
-                company.industry = Some(industry_texts[1].clone());
-            }
-        }
-
-        if details.len() > 2 {
-            let text_selector = Selector::parse(
-                crate::selectors::CompanySelectors::TEXT_MD
-            ).unwrap();
-            let size_texts: Vec<_> = details[2]
-                .select(&text_selector)
-                .map(|el| el.text().collect::<String>().trim().to_string())
-                .collect();
-            if size_texts.len() > 1 {
-                company.size = Some(size_texts[1].clone());
-            }
-        }
-
-        if details.len() > 5 {
-            let text_selector = Selector::parse(
-                crate::selectors::CompanySelectors::TEXT_MD
-            ).unwrap();
-            let founded_texts: Vec<_> = details[5]
-                .select(&text_selector)
-                .map(|el| el.text().collect::<String>().trim().to_string())
-                .collect();
-            if founded_texts.len() > 1 {
-                company.founded = Some(founded_texts[1].clone());
-            }
-        }
-
-        items.push(company);
-        Ok((items, vec![]))
+        Ok((vec![company], vec![]))
     }
 }
