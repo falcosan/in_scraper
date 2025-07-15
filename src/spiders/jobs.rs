@@ -10,7 +10,6 @@ use crate::{ config::Config, items::JobListing, spiders::{ Spider, Request }, ut
 pub struct JobsSpider {
     config: Arc<Config>,
     http_client: HttpClient,
-    api_url: String,
     keywords: String,
     location: String,
 }
@@ -18,28 +17,21 @@ pub struct JobsSpider {
 impl JobsSpider {
     pub fn new(config: Arc<Config>, keywords: String, location: String) -> Self {
         let http_client = HttpClient::new(config.clone()).expect("Failed to create HTTP client");
-
-        let api_url = format!(
-            "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords={}&location={}",
-            encode(&keywords),
-            encode(&location)
-        );
-
         Self {
             config,
             http_client,
-            api_url,
             keywords,
             location,
         }
     }
 
-    pub fn get_keywords(&self) -> &str {
-        &self.keywords
-    }
-
-    pub fn get_location(&self) -> &str {
-        &self.location
+    fn build_url(&self, start: usize) -> String {
+        format!(
+            "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords={}&location={}&start={}",
+            encode(&self.keywords),
+            encode(&self.location),
+            start
+        )
     }
 }
 
@@ -60,12 +52,7 @@ impl Spider for JobsSpider {
     }
 
     async fn start_requests(&self) -> Vec<Request> {
-        vec![
-            Request::new(format!("{}{}", self.api_url, 0)).with_meta(
-                "first_job_on_page".to_string(),
-                "0".to_string()
-            )
-        ]
+        vec![Request::new(self.build_url(0)).with_meta("page".to_string(), "0".to_string())]
     }
 
     async fn parse(
@@ -73,31 +60,26 @@ impl Spider for JobsSpider {
         response: String,
         request: &Request
     ) -> Result<(Vec<Self::Item>, Vec<Request>)> {
-        let first_job_on_page = request.meta
-            .get("first_job_on_page")
+        let page = request.meta
+            .get("page")
             .and_then(|s| s.parse::<usize>().ok())
             .unwrap_or(0);
-
         let document = Html::parse_document(&response);
-        let mut items = Vec::new();
-        let mut next_requests = Vec::new();
 
         let job_selector = Selector::parse(crate::selectors::JobSelectors::ITEM).unwrap();
-        let jobs: Vec<_> = document.select(&job_selector).collect();
+        let title_selector = Selector::parse(crate::selectors::JobSelectors::TITLE).unwrap();
+        let url_selector = Selector::parse(crate::selectors::JobSelectors::URL).unwrap();
+        let time_selector = Selector::parse(crate::selectors::JobSelectors::TIME).unwrap();
+        let company_name_selector = Selector::parse(
+            crate::selectors::JobSelectors::COMPANY_NAME
+        ).unwrap();
+        let location_selector = Selector::parse(crate::selectors::JobSelectors::LOCATION).unwrap();
 
+        let jobs: Vec<_> = document.select(&job_selector).collect();
         info!("Number of jobs returned: {}", jobs.len());
 
+        let mut items = Vec::new();
         for job in &jobs {
-            let title_selector = Selector::parse(crate::selectors::JobSelectors::TITLE).unwrap();
-            let url_selector = Selector::parse(crate::selectors::JobSelectors::URL).unwrap();
-            let time_selector = Selector::parse(crate::selectors::JobSelectors::TIME).unwrap();
-            let company_name_selector = Selector::parse(
-                crate::selectors::JobSelectors::COMPANY_NAME
-            ).unwrap();
-            let location_selector = Selector::parse(
-                crate::selectors::JobSelectors::LOCATION
-            ).unwrap();
-
             let job_title = job
                 .select(&title_selector)
                 .next()
@@ -143,14 +125,15 @@ impl Spider for JobsSpider {
             });
         }
 
+        let mut next_requests = Vec::new();
         if !jobs.is_empty() {
-            let next_page = first_job_on_page + 25;
-            let next_url = format!("{}{}", self.api_url, next_page);
-            let next_request = Request::new(next_url).with_meta(
-                "first_job_on_page".to_string(),
-                next_page.to_string()
+            let next_page = page + 1;
+            next_requests.push(
+                Request::new(self.build_url(next_page)).with_meta(
+                    "page".to_string(),
+                    next_page.to_string()
+                )
             );
-            next_requests.push(next_request);
         }
 
         Ok((items, next_requests))
