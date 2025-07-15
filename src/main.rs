@@ -5,7 +5,7 @@ use tracing::{ info, error };
 use clap::{ Parser, Subcommand };
 use in_scraper::{
     config::Config,
-    pipeline::JsonLinesPipeline,
+    pipeline::JsonPipeline,
     spiders::{ CompanyProfileSpider, JobsSpider, PeopleProfileSpider, Spider },
 };
 
@@ -68,7 +68,7 @@ async fn main() -> Result<()> {
     }
 
     let config = Arc::new(config);
-    let pipeline = Arc::new(JsonLinesPipeline::new(config.clone()));
+    let pipeline = Arc::new(JsonPipeline::new(config.clone()));
 
     match cli.command {
         Commands::CompanyProfile { urls } => {
@@ -88,10 +88,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn run_spider<S: Spider + 'static>(
-    spider: S,
-    pipeline: Arc<JsonLinesPipeline>
-) -> Result<()> {
+async fn run_spider<S: Spider + 'static>(spider: S, pipeline: Arc<JsonPipeline>) -> Result<()> {
     info!("Starting spider: {}", spider.name());
 
     let semaphore = Arc::new(Semaphore::new(spider.get_config().concurrent_requests));

@@ -8,12 +8,12 @@ use crate::config::Config;
 use anyhow::{ Result, Context };
 use std::fs::{ self, OpenOptions };
 
-pub struct JsonLinesPipeline {
+pub struct JsonPipeline {
     config: Arc<Config>,
     file_handles: Arc<Mutex<std::collections::HashMap<String, (std::fs::File, PathBuf)>>>,
 }
 
-impl JsonLinesPipeline {
+impl JsonPipeline {
     pub fn new(config: Arc<Config>) -> Self {
         Self {
             config,
@@ -29,7 +29,7 @@ impl JsonLinesPipeline {
 
         let (file, _) = handles.entry(spider_name.to_string()).or_insert_with(|| {
             let timestamp = Local::now().format("%d_%m_%Y_%H:%M:%S");
-            let filename = format!("{spider_name}_{timestamp}.jsonl");
+            let filename = format!("{spider_name}_{timestamp}.json");
             let filepath = output_dir.join(&filename);
 
             let file = OpenOptions::new()

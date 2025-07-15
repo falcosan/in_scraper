@@ -9,7 +9,7 @@ A Rust implementation of a LinkedIn scraper that can extract company profiles, j
 - **People Profile Spider**: Scrapes people profiles including experience and education
 - **Concurrent Processing**: Configurable concurrent request handling
 - **HTTP Client**: Built-in retry mechanisms and rate limiting handling
-- **JSON Lines Output**: Saves data in JSONL format with timestamps
+- **JSON Output**: Saves data in JSON format with timestamps
 - **Configurable Timeouts**: Customizable request timeouts and retry settings
 
 ## Installation
