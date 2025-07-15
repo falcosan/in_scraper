@@ -71,12 +71,16 @@ impl Spider for PeopleProfileSpider {
         let summary_box = document.select(&summary_selector).next();
 
         let name = summary_box
-            .and_then(|el| el.select(&Selector::parse("h1").unwrap()).next())
+            .and_then(|el|
+                el.select(&Selector::parse(crate::selectors::PERSON_NAME).unwrap()).next()
+            )
             .map(|el| el.text().collect::<String>().trim().to_string())
             .unwrap_or_default();
 
         let description = summary_box
-            .and_then(|el| el.select(&Selector::parse("h2").unwrap()).next())
+            .and_then(|el|
+                el.select(&Selector::parse(crate::selectors::PERSON_DESCRIPTION).unwrap()).next()
+            )
             .map(|el| el.text().collect::<String>().trim().to_string())
             .unwrap_or_default();
 
@@ -85,7 +89,11 @@ impl Spider for PeopleProfileSpider {
                 el.select(&Selector::parse("div.top-card__subline-item").unwrap())
                     .next()
                     .or_else(||
-                        el.select(&Selector::parse("span.top-card__subline-item").unwrap()).next()
+                        el
+                            .select(
+                                &Selector::parse(crate::selectors::PERSON_SUBLINE_ITEM).unwrap()
+                            )
+                            .next()
                     )
             })
             .map(|el| el.text().collect::<String>().trim().to_string())
@@ -95,7 +103,9 @@ impl Spider for PeopleProfileSpider {
         let mut connections = None;
 
         if let Some(box_el) = summary_box {
-            for span in box_el.select(&Selector::parse("span.top-card__subline-item").unwrap()) {
+            for span in box_el.select(
+                &Selector::parse(crate::selectors::PERSON_SUBLINE_ITEM).unwrap()
+            ) {
                 let text = span.text().collect::<String>();
                 if text.contains("followers") {
                     followers = Some(text.replace(" followers", "").trim().to_string());
@@ -106,9 +116,7 @@ impl Spider for PeopleProfileSpider {
         }
 
         let about = document
-            .select(
-                &Selector::parse("section.summary div.core-section-container__content p").unwrap()
-            )
+            .select(&Selector::parse(crate::selectors::PERSON_ABOUT).unwrap())
             .next()
             .map(|el| el.text().collect::<String>());
 
@@ -136,32 +144,34 @@ impl Spider for PeopleProfileSpider {
 impl PeopleProfileSpider {
     fn parse_experience(&self, document: &Html) -> Vec<Experience> {
         let mut experiences = Vec::new();
-        let exp_selector = Selector::parse("li.experience-item").unwrap();
+        let exp_selector = Selector::parse(crate::selectors::EXPERIENCE_ITEM).unwrap();
 
         for block in document.select(&exp_selector) {
             let organisation_profile = block
-                .select(&Selector::parse("h4 a").unwrap())
+                .select(&Selector::parse(crate::selectors::EXPERIENCE_TITLE).unwrap())
                 .next()
                 .and_then(|el| el.value().attr("href"))
                 .map(|href| href.split('?').next().unwrap_or(href).to_string());
 
             let location = block
-                .select(&Selector::parse("p.experience-item__location").unwrap())
+                .select(&Selector::parse(crate::selectors::EXPERIENCE_LOCATION).unwrap())
                 .next()
                 .map(|el| el.text().collect::<String>().trim().to_string());
 
             let description = block
-                .select(&Selector::parse("p.show-more-less-text__text--more").unwrap())
+                .select(&Selector::parse(crate::selectors::EXPERIENCE_DESCRIPTION_MORE).unwrap())
                 .next()
                 .or_else(||
                     block
-                        .select(&Selector::parse("p.show-more-less-text__text--less").unwrap())
+                        .select(
+                            &Selector::parse(crate::selectors::EXPERIENCE_DESCRIPTION_LESS).unwrap()
+                        )
                         .next()
                 )
                 .map(|el| el.text().collect::<String>().trim().to_string());
 
             let date_ranges: Vec<_> = block
-                .select(&Selector::parse("span.date-range time").unwrap())
+                .select(&Selector::parse(crate::selectors::EXPERIENCE_DATE_TIME).unwrap())
                 .map(|el| el.text().collect::<String>())
                 .collect();
 
@@ -171,7 +181,9 @@ impl PeopleProfileSpider {
                         Some(date_ranges[0].clone()),
                         Some(date_ranges[1].clone()),
                         block
-                            .select(&Selector::parse("span.date-range__duration").unwrap())
+                            .select(
+                                &Selector::parse(crate::selectors::EXPERIENCE_DURATION).unwrap()
+                            )
                             .next()
                             .map(|el| el.text().collect::<String>()),
                     ),
@@ -180,7 +192,9 @@ impl PeopleProfileSpider {
                         Some(date_ranges[0].clone()),
                         Some("present".to_string()),
                         block
-                            .select(&Selector::parse("span.date-range__duration").unwrap())
+                            .select(
+                                &Selector::parse(crate::selectors::EXPERIENCE_DURATION).unwrap()
+                            )
                             .next()
                             .map(|el| el.text().collect::<String>()),
                     ),
@@ -202,23 +216,23 @@ impl PeopleProfileSpider {
 
     fn parse_education(&self, document: &Html) -> Vec<Education> {
         let mut educations = Vec::new();
-        let edu_selector = Selector::parse("li.education__list-item").unwrap();
+        let edu_selector = Selector::parse(crate::selectors::EDUCATION_ITEM).unwrap();
 
         for block in document.select(&edu_selector) {
             let organisation = block
-                .select(&Selector::parse("h3").unwrap())
+                .select(&Selector::parse(crate::selectors::EDUCATION_ORGANIZATION).unwrap())
                 .next()
                 .map(|el| el.text().collect::<String>().trim().to_string())
                 .unwrap_or_default();
 
             let organisation_profile = block
-                .select(&Selector::parse("a").unwrap())
+                .select(&Selector::parse(crate::selectors::EDUCATION_LINK).unwrap())
                 .next()
                 .and_then(|el| el.value().attr("href"))
                 .map(|href| href.split('?').next().unwrap_or(href).to_string());
 
             let course_details = block
-                .select(&Selector::parse("h4 span").unwrap())
+                .select(&Selector::parse(crate::selectors::EDUCATION_DETAILS).unwrap())
                 .map(|el| el.text().collect::<String>().trim().to_string())
                 .collect::<Vec<_>>()
                 .join(" ")
@@ -226,12 +240,12 @@ impl PeopleProfileSpider {
                 .to_string();
 
             let description = block
-                .select(&Selector::parse("div.education__item--details p").unwrap())
+                .select(&Selector::parse(crate::selectors::EDUCATION_DESCRIPTION).unwrap())
                 .next()
                 .map(|el| el.text().collect::<String>().trim().to_string());
 
             let date_ranges: Vec<_> = block
-                .select(&Selector::parse("span.date-range time").unwrap())
+                .select(&Selector::parse(crate::selectors::EDUCATION_DATE_TIME).unwrap())
                 .map(|el| el.text().collect::<String>())
                 .collect();
 

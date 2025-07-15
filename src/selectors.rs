@@ -1,0 +1,29 @@
+pub const PERSON_NAME: &str = "h1";
+pub const PERSON_DESCRIPTION: &str = "h2";
+pub const PERSON_SUBLINE_ITEM: &str = "span.top-card__subline-item";
+pub const PERSON_ABOUT: &str = "section.summary div.core-section-container__content p";
+pub const EXPERIENCE_ITEM: &str = "li.experience-item";
+pub const EXPERIENCE_TITLE: &str = "h4 a";
+pub const EXPERIENCE_LOCATION: &str = "p.experience-item__location";
+pub const EXPERIENCE_DESCRIPTION_MORE: &str = "p.show-more-less-text__text--more";
+pub const EXPERIENCE_DESCRIPTION_LESS: &str = "p.show-more-less-text__text--less";
+pub const EXPERIENCE_DATE_TIME: &str = "span.date-range time";
+pub const EXPERIENCE_DURATION: &str = "span.date-range__duration";
+pub const EDUCATION_ITEM: &str = "li.education__list-item";
+pub const EDUCATION_ORGANIZATION: &str = "h3";
+pub const EDUCATION_LINK: &str = "a";
+pub const EDUCATION_DETAILS: &str = "h4 span";
+pub const EDUCATION_DESCRIPTION: &str = "div.education__item--details p";
+pub const EDUCATION_DATE_TIME: &str = "span.date-range time";
+
+pub const COMPANY_NAME: &str = ".top-card-layout__entity-info h1";
+pub const COMPANY_SUMMARY: &str = ".top-card-layout__entity-info h4 span";
+pub const COMPANY_DETAILS: &str = ".core-section-container__content .mb-2";
+pub const COMPANY_TEXT_MD: &str = ".text-md";
+
+pub const JOB_ITEM: &str = "li";
+pub const JOB_TITLE: &str = "h3";
+pub const JOB_URL: &str = ".base-card__full-link";
+pub const JOB_TIME: &str = "time";
+pub const JOB_COMPANY_NAME: &str = "h4 a";
+pub const JOB_LOCATION: &str = ".job-search-card__location";
