@@ -1,3 +1,5 @@
+// use std::env;
+// use dotenv::dotenv;
 use std::sync::Arc;
 use tokio::time::sleep;
 use std::time::Duration;
@@ -9,10 +11,21 @@ use reqwest::{ Client, Response, StatusCode };
 pub struct HttpClient {
     client: Client,
     config: Arc<Config>,
+    // li_at_cookie: String,
+    // jsession_id_cookie: String,
 }
 
 impl HttpClient {
     pub fn new(config: Arc<Config>) -> Result<Self> {
+        // dotenv().ok();
+        // let li_at_cookie = env
+        //     ::var("LINKEDIN_COOKIE_LI_AT")
+        //     .context("LINKEDIN_COOKIE_LI_AT variable not set in .env file")?;
+
+        // let jsession_id_cookie = env
+        //     ::var("LINKEDIN_COOKIE_JSESSIONID")
+        //     .context("LINKEDIN_COOKIE_JSESSIONID variable not set in .env file")?;
+
         let client = Client::builder()
             .timeout(Duration::from_secs(config.request_timeout))
             .user_agent(&config.user_agent)
@@ -22,11 +35,29 @@ impl HttpClient {
             .build()
             .context("Failed to build HTTP client")?;
 
-        Ok(Self { client, config })
+        Ok(Self {
+            client,
+            config,
+            // li_at_cookie,
+            // jsession_id_cookie
+        })
     }
 
     pub async fn get(&self, url: &str) -> Result<Response> {
-        self.execute_with_retry(|| self.client.get(url).send()).await
+        // let cookie_header = format!(
+        //     "li_at={}; jsessionid={}",
+        //     self.li_at_cookie,
+        //     self.jsession_id_cookie
+        // );
+        self.execute_with_retry(||
+            self.client
+                .get(url)
+                // .header("cookie", &cookie_header)
+                // .header("referer", "https://www.linkedin.com/feed/")
+                // .header("accept", "application/vnd.linkedin.normalized+json+2.1")
+                // .header("csrf-token", self.jsession_id_cookie.replace("\"", ""))
+                .send()
+        ).await
     }
 
     pub async fn get_text(&self, url: &str) -> Result<String> {
@@ -93,20 +124,6 @@ impl HttpClient {
                 }
             }
         }
-    }
-
-    pub async fn get_with_headers(
-        &self,
-        url: &str,
-        headers: Vec<(&str, &str)>
-    ) -> Result<Response> {
-        let mut request = self.client.get(url);
-
-        for (key, value) in headers {
-            request = request.header(key, value);
-        }
-
-        self.execute_with_retry(|| request.try_clone().unwrap().send()).await
     }
 }
 
