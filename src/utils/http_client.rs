@@ -4,7 +4,7 @@ use std::sync::Arc;
 use tokio::time::sleep;
 use std::time::Duration;
 use crate::config::Config;
-use tracing::{ debug, error, warn };
+use tracing::{ error, warn };
 use anyhow::{ Result, Context };
 use reqwest::{ Client, Response, StatusCode };
 
@@ -51,7 +51,9 @@ impl HttpClient {
         // );
         self.execute_with_retry(||
             self.client
-                .get(url)
+                .get(
+                    format!("https://proxy.scrapeops.io/v1/?api_key=1a816100-42cc-4945-870a-6a82f2a88674&url={}", url)
+                )
                 // .header("cookie", &cookie_header)
                 // .header("referer", "https://www.linkedin.com/feed/")
                 // .header("accept", "application/vnd.linkedin.normalized+json+2.1")
@@ -79,7 +81,6 @@ impl HttpClient {
                     let status = response.status();
 
                     if status.is_success() {
-                        debug!("Successfully fetched URL");
                         return Ok(response);
                     }
 
