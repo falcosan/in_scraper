@@ -2,19 +2,23 @@ use tracing::info;
 use anyhow::Result;
 use std::sync::Arc;
 use async_trait::async_trait;
-use scraper::{ Html, Selector };
 use crate::{
     config::Config,
     utils::HttpClient,
     items::CompanyProfile,
     spiders::{ Spider, Request },
 };
+use scraper::{ Html, Selector, ElementRef };
 
 #[derive(Clone)]
 pub struct CompanyProfileSpider {
     config: Arc<Config>,
     http_client: HttpClient,
     company_pages: Vec<String>,
+    name_selector: Selector,
+    summary_selector: Selector,
+    details_selector: Selector,
+    text_selector: Selector,
 }
 
 impl CompanyProfileSpider {
@@ -24,21 +28,27 @@ impl CompanyProfileSpider {
             config,
             http_client,
             company_pages,
+            name_selector: Selector::parse(crate::selectors::CompanySelectors::NAME).expect(
+                "Invalid name selector"
+            ),
+            summary_selector: Selector::parse(crate::selectors::CompanySelectors::SUMMARY).expect(
+                "Invalid summary selector"
+            ),
+            details_selector: Selector::parse(crate::selectors::CompanySelectors::DETAILS).expect(
+                "Invalid details selector"
+            ),
+            text_selector: Selector::parse(crate::selectors::CompanySelectors::TEXT_MD).expect(
+                "Invalid text selector"
+            ),
         }
     }
 
-    fn extract_detail_text(
-        &self,
-        details: &[scraper::ElementRef],
-        index: usize,
-        text_selector: &Selector
-    ) -> Option<String> {
+    fn extract_indexed_detail(&self, details: &[ElementRef], index: usize) -> Option<String> {
         details.get(index).and_then(|detail| {
-            let texts: Vec<String> = detail
-                .select(text_selector)
+            detail
+                .select(&self.text_selector)
+                .nth(1)
                 .map(|el| el.text().collect::<String>().trim().to_string())
-                .collect();
-            texts.get(1).cloned()
         })
     }
 }
@@ -78,38 +88,30 @@ impl Spider for CompanyProfileSpider {
             .get("company_index")
             .and_then(|s| s.parse::<usize>().ok())
             .unwrap_or(0);
-        info!("Scraping page {} of {}", company_index + 1, self.company_pages.len());
+        info!("Parsing company {} of {}", company_index + 1, self.company_pages.len());
 
         let document = Html::parse_document(&response);
-        let name_selector = Selector::parse(crate::selectors::CompanySelectors::NAME).unwrap();
-        let summary_selector = Selector::parse(
-            crate::selectors::CompanySelectors::SUMMARY
-        ).unwrap();
-        let details_selector = Selector::parse(
-            crate::selectors::CompanySelectors::DETAILS
-        ).unwrap();
-        let text_selector = Selector::parse(crate::selectors::CompanySelectors::TEXT_MD).unwrap();
 
         let name = document
-            .select(&name_selector)
+            .select(&self.name_selector)
             .next()
             .map(|el| el.text().collect::<String>().trim().to_string())
             .unwrap_or_else(|| "not-found".to_string());
 
         let summary = document
-            .select(&summary_selector)
+            .select(&self.summary_selector)
             .next()
             .map(|el| el.text().collect::<String>().trim().to_string())
             .unwrap_or_else(|| "not-found".to_string());
 
-        let details: Vec<_> = document.select(&details_selector).collect();
+        let details: Vec<_> = document.select(&self.details_selector).collect();
 
         let company = CompanyProfile {
             name,
             summary,
-            industry: self.extract_detail_text(&details, 1, &text_selector),
-            size: self.extract_detail_text(&details, 2, &text_selector),
-            founded: self.extract_detail_text(&details, 5, &text_selector),
+            industry: self.extract_indexed_detail(&details, 1),
+            size: self.extract_indexed_detail(&details, 2),
+            founded: self.extract_indexed_detail(&details, 5),
         };
 
         Ok((vec![company], vec![]))
