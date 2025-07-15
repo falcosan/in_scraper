@@ -26,7 +26,6 @@ struct CompiledSelectors {
     exp_date_time: Selector,
     exp_duration: Selector,
     exp_company_logo: Selector,
-    exp_company_name: Selector,
     edu_item: Selector,
     edu_org: Selector,
     edu_link: Selector,
@@ -34,8 +33,15 @@ struct CompiledSelectors {
     edu_desc: Selector,
     edu_date_time: Selector,
     projects_items: Selector,
+    project_title: Selector,
+    project_description: Selector,
+    project_link: Selector,
     languages_items: Selector,
+    language_name: Selector,
+    language_proficiency: Selector,
     activities_items: Selector,
+    activity_title: Selector,
+    activity_link: Selector,
 }
 
 impl CompiledSelectors {
@@ -68,9 +74,6 @@ impl CompiledSelectors {
             exp_company_logo: Self::parse_selector(
                 crate::selectors::PeopleSelectors::EXPERIENCE_EDUCATION_COMPANY_LOGO
             ),
-            exp_company_name: Self::parse_selector(
-                crate::selectors::PeopleSelectors::EXPERIENCE_EDUCATION_COMPANY_NAME
-            ),
             edu_item: Self::parse_selector(crate::selectors::PeopleSelectors::EDUCATION_ITEM),
             edu_org: Self::parse_selector(
                 crate::selectors::PeopleSelectors::EDUCATION_ORGANIZATION
@@ -84,12 +87,23 @@ impl CompiledSelectors {
                 crate::selectors::PeopleSelectors::EDUCATION_DATE_TIME
             ),
             projects_items: Self::parse_selector(crate::selectors::PeopleSelectors::PROJECTS_ITEMS),
+            project_title: Self::parse_selector(crate::selectors::PeopleSelectors::PROJECT_TITLE),
+            project_description: Self::parse_selector(
+                crate::selectors::PeopleSelectors::PROJECT_DESCRIPTION
+            ),
+            project_link: Self::parse_selector(crate::selectors::PeopleSelectors::PROJECT_LINK),
             languages_items: Self::parse_selector(
                 crate::selectors::PeopleSelectors::LANGUAGES_ITEMS
+            ),
+            language_name: Self::parse_selector(crate::selectors::PeopleSelectors::LANGUAGE_NAME),
+            language_proficiency: Self::parse_selector(
+                crate::selectors::PeopleSelectors::LANGUAGE_PROFICIENCY
             ),
             activities_items: Self::parse_selector(
                 crate::selectors::PeopleSelectors::ACTIVITIES_ITEMS
             ),
+            activity_title: Self::parse_selector(crate::selectors::PeopleSelectors::ACTIVITY_TITLE),
+            activity_link: Self::parse_selector(crate::selectors::PeopleSelectors::ACTIVITY_LINK),
         }
     }
 
@@ -223,10 +237,10 @@ impl PeopleProfileSpider {
         document
             .select(&self.selectors.projects_items)
             .map(|block| Project {
-                name: Self::extract_text(block, &self.selectors.exp_title),
-                description: Self::extract_text(block, &self.selectors.exp_desc_less),
+                name: Self::extract_text(block, &self.selectors.project_title),
+                description: Self::extract_text(block, &self.selectors.project_description),
                 url: block
-                    .select(&self.selectors.edu_link)
+                    .select(&self.selectors.project_link)
                     .next()
                     .and_then(|el| el.value().attr("href"))
                     .map(Self::truncate_url),
@@ -238,8 +252,8 @@ impl PeopleProfileSpider {
         document
             .select(&self.selectors.languages_items)
             .map(|block| Language {
-                name: Self::extract_text(block, &self.selectors.exp_company_name),
-                proficiency: Self::extract_text(block, &self.selectors.exp_desc_less),
+                name: Self::extract_text(block, &self.selectors.language_name),
+                proficiency: Self::extract_text(block, &self.selectors.language_proficiency),
             })
             .collect()
     }
@@ -248,9 +262,9 @@ impl PeopleProfileSpider {
         document
             .select(&self.selectors.activities_items)
             .map(|block| Activity {
-                title: Self::extract_text(block, &self.selectors.exp_title),
+                title: Self::extract_text(block, &self.selectors.activity_title),
                 url: block
-                    .select(&self.selectors.edu_link)
+                    .select(&self.selectors.activity_link)
                     .next()
                     .and_then(|el| el.value().attr("href"))
                     .map(Self::truncate_url),
