@@ -10,8 +10,6 @@ impl PeopleSelectors {
         "h3.top-card-layout__first-subline .not-first-middot span:first-child";
     pub const CONNECTIONS: &'static str =
         "h3.top-card-layout__first-subline .not-first-middot span:last-child";
-    pub const ABOUT_SECTION: &'static str = "section[id^='about']";
-    pub const ABOUT_TEXT: &'static str = "section[id^='about'] p";
     pub const EXPERIENCE_EDUCATION_SECTION: &'static str = "section#experience-education";
     pub const EXPERIENCE_EDUCATION_ITEMS: &'static str =
         "section#experience-education ul.visible-list > li.profile-section-card";
@@ -32,7 +30,6 @@ impl PeopleSelectors {
     pub const ACTIVITIES_SECTION: &'static str = "section#activity";
     pub const ACTIVITIES_ITEMS: &'static str = "section#activity li";
     pub const SUBLINE_ITEM: &'static str = "span.top-card__subline-item";
-    pub const ABOUT: &'static str = "section[id^='about'] p";
     pub const EXPERIENCE_ITEM: &'static str = "li.profile-section-card";
     pub const EXPERIENCE_TITLE: &'static str = "li.profile-section-card h4 > p:first-child";
     pub const EXPERIENCE_LOCATION: &'static str =

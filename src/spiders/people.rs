@@ -18,9 +18,6 @@ struct CompiledSelectors {
     followers: Selector,
     connections: Selector,
     subline_item: Selector,
-    about: Selector,
-    about_section: Selector,
-    about_text: Selector,
     exp_item: Selector,
     exp_title: Selector,
     exp_location: Selector,
@@ -51,9 +48,6 @@ impl CompiledSelectors {
             followers: Self::parse_selector(crate::selectors::PeopleSelectors::FOLLOWERS),
             connections: Self::parse_selector(crate::selectors::PeopleSelectors::CONNECTIONS),
             subline_item: Self::parse_selector(crate::selectors::PeopleSelectors::SUBLINE_ITEM),
-            about: Self::parse_selector(crate::selectors::PeopleSelectors::ABOUT),
-            about_section: Self::parse_selector(crate::selectors::PeopleSelectors::ABOUT_SECTION),
-            about_text: Self::parse_selector(crate::selectors::PeopleSelectors::ABOUT_TEXT),
             exp_item: Self::parse_selector(crate::selectors::PeopleSelectors::EXPERIENCE_ITEM),
             exp_title: Self::parse_selector(crate::selectors::PeopleSelectors::EXPERIENCE_TITLE),
             exp_location: Self::parse_selector(
@@ -264,20 +258,6 @@ impl PeopleProfileSpider {
             .collect()
     }
 
-    fn parse_about(&self, document: &Html) -> Option<String> {
-        if let Some(about_section) = document.select(&self.selectors.about_section).next() {
-            if let Some(about_text) = Self::extract_text(about_section, &self.selectors.about_text) {
-                return Some(about_text);
-            }
-        }
-
-        document
-            .select(&self.selectors.about)
-            .next()
-            .map(|el| el.text().collect::<String>().trim().to_string())
-            .filter(|text| !text.is_empty())
-    }
-
     fn extract_location_followers_connections(
         &self,
         summary_box: ElementRef
@@ -368,7 +348,6 @@ impl Spider for PeopleProfileSpider {
             description: summary_box
                 .and_then(|el| Self::extract_text(el, &self.selectors.description))
                 .unwrap_or_default(),
-            about: self.parse_about(&document),
             experience: self.parse_experience(&document),
             education: self.parse_education(&document),
             location,

@@ -28,7 +28,6 @@ pub struct PersonProfile {
     pub location: Option<String>,
     pub followers: Option<String>,
     pub connections: Option<String>,
-    pub about: Option<String>,
     pub experience: Vec<Experience>,
     pub education: Vec<Education>,
     pub projects: Vec<Project>,
