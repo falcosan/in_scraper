@@ -2,11 +2,12 @@ use tracing::info;
 use anyhow::Result;
 use std::sync::Arc;
 use async_trait::async_trait;
+use htmlentity::entity::{ decode, ICodedDataTrait };
 use crate::{
     config::Config,
-    utils::HttpClient,
     items::CompanyProfile,
     spiders::{ Spider, Request },
+    utils::{ selector_utils::parse_selector, HttpClient },
 };
 use scraper::{ Html, Selector, ElementRef };
 
@@ -28,18 +29,10 @@ impl CompanyProfileSpider {
             config,
             http_client,
             company_pages,
-            name_selector: Selector::parse(crate::selectors::CompanySelectors::NAME).expect(
-                "Invalid name selector"
-            ),
-            summary_selector: Selector::parse(crate::selectors::CompanySelectors::SUMMARY).expect(
-                "Invalid summary selector"
-            ),
-            details_selector: Selector::parse(crate::selectors::CompanySelectors::DETAILS).expect(
-                "Invalid details selector"
-            ),
-            text_selector: Selector::parse(crate::selectors::CompanySelectors::TEXT_MD).expect(
-                "Invalid text selector"
-            ),
+            name_selector: parse_selector(crate::selectors::CompanySelectors::NAME),
+            text_selector: parse_selector(crate::selectors::CompanySelectors::TEXT_MD),
+            summary_selector: parse_selector(crate::selectors::CompanySelectors::SUMMARY),
+            details_selector: parse_selector(crate::selectors::CompanySelectors::DETAILS),
         }
     }
 
@@ -92,7 +85,8 @@ impl Spider for CompanyProfileSpider {
             .unwrap_or(0);
         info!("Parsing company {} of {}", company_index + 1, self.company_pages.len());
 
-        let document = Html::parse_document(&response);
+        let decoded = decode(response.as_bytes());
+        let document = Html::parse_document(&decoded.to_string().unwrap());
 
         let name = document
             .select(&self.name_selector)

@@ -19,7 +19,7 @@ pub struct JobListing {
     pub company_location: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct PersonProfile {
     pub profile: String,
     pub url: String,
@@ -28,22 +28,26 @@ pub struct PersonProfile {
     pub location: Option<String>,
     pub followers: Option<String>,
     pub connections: Option<String>,
-    pub about: Option<String>,
     pub experience: Vec<Experience>,
     pub education: Vec<Education>,
+    pub projects: Vec<Project>,
+    pub languages: Vec<Language>,
+    pub activities: Vec<Activity>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct Experience {
     pub organization_profile: Option<String>,
     pub location: Option<String>,
     pub description: Option<String>,
+    pub duration: Option<String>,
     pub start_time: Option<String>,
     pub end_time: Option<String>,
-    pub duration: Option<String>,
+    pub logo: Option<String>,
+    pub title: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct Education {
     pub organization: String,
     pub organization_profile: Option<String>,
@@ -51,4 +55,23 @@ pub struct Education {
     pub description: Option<String>,
     pub start_time: Option<String>,
     pub end_time: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+pub struct Project {
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub url: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+pub struct Language {
+    pub name: Option<String>,
+    pub proficiency: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+pub struct Activity {
+    pub title: Option<String>,
+    pub url: Option<String>,
 }

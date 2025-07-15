@@ -5,7 +5,13 @@ use urlencoding::encode;
 use async_trait::async_trait;
 use std::collections::HashSet;
 use scraper::{ Html, Selector, ElementRef };
-use crate::{ config::Config, items::JobListing, spiders::{ Spider, Request }, utils::HttpClient };
+use htmlentity::entity::{ decode, ICodedDataTrait };
+use crate::{
+    config::Config,
+    items::JobListing,
+    spiders::{ Spider, Request },
+    utils::{ selector_utils::parse_selector, HttpClient },
+};
 
 #[derive(Clone)]
 pub struct JobsSpider {
@@ -86,16 +92,16 @@ impl Spider for JobsSpider {
             .get("start")
             .and_then(|s| s.parse::<usize>().ok())
             .unwrap_or(0);
-        let document = Html::parse_document(&response);
 
-        let job_selector = Selector::parse(crate::selectors::JobSelectors::ITEM).unwrap();
-        let title_selector = Selector::parse(crate::selectors::JobSelectors::TITLE).unwrap();
-        let url_selector = Selector::parse(crate::selectors::JobSelectors::URL).unwrap();
-        let time_selector = Selector::parse(crate::selectors::JobSelectors::TIME).unwrap();
-        let company_name_selector = Selector::parse(
-            crate::selectors::JobSelectors::COMPANY_NAME
-        ).unwrap();
-        let location_selector = Selector::parse(crate::selectors::JobSelectors::LOCATION).unwrap();
+        let decoded = decode(response.as_bytes());
+        let document = Html::parse_document(&decoded.to_string().unwrap());
+
+        let job_selector = parse_selector(crate::selectors::JobSelectors::ITEM);
+        let title_selector = parse_selector(crate::selectors::JobSelectors::TITLE);
+        let url_selector = parse_selector(crate::selectors::JobSelectors::URL);
+        let time_selector = parse_selector(crate::selectors::JobSelectors::TIME);
+        let company_name_selector = parse_selector(crate::selectors::JobSelectors::COMPANY_NAME);
+        let location_selector = parse_selector(crate::selectors::JobSelectors::LOCATION);
 
         let mut items = Vec::new();
         let mut seen_urls = HashSet::new();
