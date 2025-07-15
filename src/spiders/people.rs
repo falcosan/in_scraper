@@ -2,6 +2,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use async_trait::async_trait;
 use scraper::{ Html, Selector, ElementRef };
+use htmlentity::entity::{ decode, ICodedDataTrait };
 use crate::{
     config::Config,
     utils::HttpClient,
@@ -344,7 +345,8 @@ impl Spider for PeopleProfileSpider {
             .cloned()
             .unwrap_or_else(|| "unknown".to_string());
 
-        let document = Html::parse_document(&response);
+        let decoded = decode(response.as_bytes());
+        let document = Html::parse_document(&decoded.to_string().unwrap());
 
         let summary_box = document.select(&self.selectors.summary).next();
         let (location, followers, connections) = if let Some(box_el) = summary_box {

@@ -2,6 +2,7 @@ use tracing::info;
 use anyhow::Result;
 use std::sync::Arc;
 use async_trait::async_trait;
+use htmlentity::entity::{ decode, ICodedDataTrait };
 use crate::{
     config::Config,
     utils::HttpClient,
@@ -92,7 +93,8 @@ impl Spider for CompanyProfileSpider {
             .unwrap_or(0);
         info!("Parsing company {} of {}", company_index + 1, self.company_pages.len());
 
-        let document = Html::parse_document(&response);
+        let decoded = decode(response.as_bytes());
+        let document = Html::parse_document(&decoded.to_string().unwrap());
 
         let name = document
             .select(&self.name_selector)

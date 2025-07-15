@@ -5,6 +5,7 @@ use urlencoding::encode;
 use async_trait::async_trait;
 use std::collections::HashSet;
 use scraper::{ Html, Selector, ElementRef };
+use htmlentity::entity::{ decode, ICodedDataTrait };
 use crate::{ config::Config, items::JobListing, spiders::{ Spider, Request }, utils::HttpClient };
 
 #[derive(Clone)]
@@ -86,7 +87,9 @@ impl Spider for JobsSpider {
             .get("start")
             .and_then(|s| s.parse::<usize>().ok())
             .unwrap_or(0);
-        let document = Html::parse_document(&response);
+
+        let decoded = decode(response.as_bytes());
+        let document = Html::parse_document(&decoded.to_string().unwrap());
 
         let job_selector = Selector::parse(crate::selectors::JobSelectors::ITEM).unwrap();
         let title_selector = Selector::parse(crate::selectors::JobSelectors::TITLE).unwrap();
