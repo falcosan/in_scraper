@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use anyhow::Result;
 use async_trait::async_trait;
-use scraper::{ Html, Selector };
+use scraper::{ Html, Selector, ElementRef };
 use crate::{
     config::Config,
     utils::HttpClient,
@@ -14,6 +14,24 @@ pub struct PeopleProfileSpider {
     config: Arc<Config>,
     http_client: HttpClient,
     profiles: Vec<String>,
+    summary_selector: Selector,
+    name_selector: Selector,
+    description_selector: Selector,
+    subline_item_selector: Selector,
+    about_selector: Selector,
+    exp_item_selector: Selector,
+    exp_title_selector: Selector,
+    exp_location_selector: Selector,
+    exp_desc_more_selector: Selector,
+    exp_desc_less_selector: Selector,
+    exp_date_time_selector: Selector,
+    exp_duration_selector: Selector,
+    edu_item_selector: Selector,
+    edu_org_selector: Selector,
+    edu_link_selector: Selector,
+    edu_details_selector: Selector,
+    edu_desc_selector: Selector,
+    edu_date_time_selector: Selector,
 }
 
 impl PeopleProfileSpider {
@@ -23,6 +41,54 @@ impl PeopleProfileSpider {
             config,
             http_client,
             profiles,
+            summary_selector: Selector::parse("section.top-card-layout").unwrap(),
+            name_selector: Selector::parse(crate::selectors::PeopleSelectors::NAME).unwrap(),
+            description_selector: Selector::parse(
+                crate::selectors::PeopleSelectors::DESCRIPTION
+            ).unwrap(),
+            subline_item_selector: Selector::parse(
+                crate::selectors::PeopleSelectors::SUBLINE_ITEM
+            ).unwrap(),
+            about_selector: Selector::parse(crate::selectors::PeopleSelectors::ABOUT).unwrap(),
+            exp_item_selector: Selector::parse(
+                crate::selectors::PeopleSelectors::EXPERIENCE_ITEM
+            ).unwrap(),
+            exp_title_selector: Selector::parse(
+                crate::selectors::PeopleSelectors::EXPERIENCE_TITLE
+            ).unwrap(),
+            exp_location_selector: Selector::parse(
+                crate::selectors::PeopleSelectors::EXPERIENCE_LOCATION
+            ).unwrap(),
+            exp_desc_more_selector: Selector::parse(
+                crate::selectors::PeopleSelectors::EXPERIENCE_DESCRIPTION_MORE
+            ).unwrap(),
+            exp_desc_less_selector: Selector::parse(
+                crate::selectors::PeopleSelectors::EXPERIENCE_DESCRIPTION_LESS
+            ).unwrap(),
+            exp_date_time_selector: Selector::parse(
+                crate::selectors::PeopleSelectors::EXPERIENCE_DATE_TIME
+            ).unwrap(),
+            exp_duration_selector: Selector::parse(
+                crate::selectors::PeopleSelectors::EXPERIENCE_DURATION
+            ).unwrap(),
+            edu_item_selector: Selector::parse(
+                crate::selectors::PeopleSelectors::EDUCATION_ITEM
+            ).unwrap(),
+            edu_org_selector: Selector::parse(
+                crate::selectors::PeopleSelectors::EDUCATION_ORGANIZATION
+            ).unwrap(),
+            edu_link_selector: Selector::parse(
+                crate::selectors::PeopleSelectors::EDUCATION_LINK
+            ).unwrap(),
+            edu_details_selector: Selector::parse(
+                crate::selectors::PeopleSelectors::EDUCATION_DETAILS
+            ).unwrap(),
+            edu_desc_selector: Selector::parse(
+                crate::selectors::PeopleSelectors::EDUCATION_DESCRIPTION
+            ).unwrap(),
+            edu_date_time_selector: Selector::parse(
+                crate::selectors::PeopleSelectors::EDUCATION_DATE_TIME
+            ).unwrap(),
         }
     }
 
@@ -30,137 +96,90 @@ impl PeopleProfileSpider {
         format!("https://www.linkedin.com/in/{}/", profile)
     }
 
-    fn parse_experience(
-        &self,
-        document: &Html,
-        exp_selector: &Selector,
-        title_selector: &Selector,
-        location_selector: &Selector,
-        desc_more_selector: &Selector,
-        desc_less_selector: &Selector,
-        date_time_selector: &Selector,
-        duration_selector: &Selector
-    ) -> Vec<Experience> {
-        let mut experiences = Vec::new();
-        for block in document.select(exp_selector) {
-            let organisation_profile = block
-                .select(title_selector)
-                .next()
-                .and_then(|el| el.value().attr("href"))
-                .map(|href| href.split('?').next().unwrap_or(href).to_string());
-
-            let location = block
-                .select(location_selector)
-                .next()
-                .map(|el| el.text().collect::<String>().trim().to_string());
-
-            let description = block
-                .select(desc_more_selector)
-                .next()
-                .or_else(|| block.select(desc_less_selector).next())
-                .map(|el| el.text().collect::<String>().trim().to_string());
-
-            let date_ranges: Vec<_> = block
-                .select(date_time_selector)
-                .map(|el| el.text().collect::<String>())
-                .collect();
-
-            let (start_time, end_time, duration) = match date_ranges.len() {
-                2 =>
-                    (
-                        Some(date_ranges[0].clone()),
-                        Some(date_ranges[1].clone()),
-                        block
-                            .select(duration_selector)
-                            .next()
-                            .map(|el| el.text().collect::<String>()),
-                    ),
-                1 =>
-                    (
-                        Some(date_ranges[0].clone()),
-                        Some("present".to_string()),
-                        block
-                            .select(duration_selector)
-                            .next()
-                            .map(|el| el.text().collect::<String>()),
-                    ),
-                _ => (None, None, None),
-            };
-
-            experiences.push(Experience {
-                organisation_profile,
-                location,
-                description,
-                start_time,
-                end_time,
-                duration,
-            });
-        }
-        experiences
+    fn extract_text(element: ElementRef, selector: &Selector) -> Option<String> {
+        element
+            .select(selector)
+            .next()
+            .map(|el| el.text().collect::<String>().trim().to_string())
     }
 
-    fn parse_education(
-        &self,
-        document: &Html,
-        edu_selector: &Selector,
-        org_selector: &Selector,
-        link_selector: &Selector,
-        details_selector: &Selector,
-        desc_selector: &Selector,
-        date_time_selector: &Selector
-    ) -> Vec<Education> {
-        let mut educations = Vec::new();
-        for block in document.select(edu_selector) {
-            let organisation = block
-                .select(org_selector)
-                .next()
-                .map(|el| el.text().collect::<String>().trim().to_string())
-                .unwrap_or_default();
+    fn truncate_url(url: &str) -> String {
+        url.split('?').next().unwrap_or(url).to_string()
+    }
 
-            let organisation_profile = block
-                .select(link_selector)
-                .next()
-                .and_then(|el| el.value().attr("href"))
-                .map(|href| href.split('?').next().unwrap_or(href).to_string());
+    fn parse_experience(&self, document: &Html) -> Vec<Experience> {
+        document
+            .select(&self.exp_item_selector)
+            .map(|block| {
+                let date_ranges: Vec<_> = block
+                    .select(&self.exp_date_time_selector)
+                    .map(|el| el.text().collect::<String>())
+                    .collect();
+                let (start_time, end_time) = match date_ranges.len() {
+                    2 => (Some(date_ranges[0].clone()), Some(date_ranges[1].clone())),
+                    1 => (Some(date_ranges[0].clone()), Some("present".to_string())),
+                    _ => (None, None),
+                };
 
-            let course_details = block
-                .select(details_selector)
-                .map(|el| el.text().collect::<String>().trim().to_string())
-                .collect::<Vec<_>>()
-                .join(" ")
-                .trim()
-                .to_string();
+                Experience {
+                    organisation_profile: block
+                        .select(&self.exp_title_selector)
+                        .next()
+                        .and_then(|el| el.value().attr("href"))
+                        .map(Self::truncate_url),
+                    location: Self::extract_text(block, &self.exp_location_selector),
+                    description: Self::extract_text(block, &self.exp_desc_more_selector).or_else(||
+                        Self::extract_text(block, &self.exp_desc_less_selector)
+                    ),
+                    duration: Self::extract_text(block, &self.exp_duration_selector),
+                    start_time,
+                    end_time,
+                }
+            })
+            .collect()
+    }
 
-            let description = block
-                .select(desc_selector)
-                .next()
-                .map(|el| el.text().collect::<String>().trim().to_string());
+    fn parse_education(&self, document: &Html) -> Vec<Education> {
+        document
+            .select(&self.edu_item_selector)
+            .map(|block| {
+                let course_details = block
+                    .select(&self.edu_details_selector)
+                    .map(|el| el.text().collect::<String>().trim().to_string())
+                    .collect::<Vec<_>>()
+                    .join(" ");
 
-            let date_ranges: Vec<_> = block
-                .select(date_time_selector)
-                .map(|el| el.text().collect::<String>())
-                .collect();
+                let date_ranges: Vec<_> = block
+                    .select(&self.edu_date_time_selector)
+                    .map(|el| el.text().collect::<String>())
+                    .collect();
+                let (start_time, end_time) = match date_ranges.len() {
+                    2 => (Some(date_ranges[0].clone()), Some(date_ranges[1].clone())),
+                    1 => (Some(date_ranges[0].clone()), Some("present".to_string())),
+                    _ => (None, None),
+                };
 
-            let (start_time, end_time) = match date_ranges.len() {
-                2 => (Some(date_ranges[0].clone()), Some(date_ranges[1].clone())),
-                1 => (Some(date_ranges[0].clone()), Some("present".to_string())),
-                _ => (None, None),
-            };
-
-            educations.push(Education {
-                organisation,
-                organisation_profile,
-                course_details: if course_details.is_empty() {
-                    None
-                } else {
-                    Some(course_details)
-                },
-                description,
-                start_time,
-                end_time,
-            });
-        }
-        educations
+                Education {
+                    organisation: Self::extract_text(
+                        block,
+                        &self.edu_org_selector
+                    ).unwrap_or_default(),
+                    organisation_profile: block
+                        .select(&self.edu_link_selector)
+                        .next()
+                        .and_then(|el| el.value().attr("href"))
+                        .map(Self::truncate_url),
+                    course_details: if course_details.is_empty() {
+                        None
+                    } else {
+                        Some(course_details)
+                    },
+                    description: Self::extract_text(block, &self.edu_desc_selector),
+                    start_time,
+                    end_time,
+                }
+            })
+            .collect()
     }
 }
 
@@ -199,136 +218,48 @@ impl Spider for PeopleProfileSpider {
     ) -> Result<(Vec<Self::Item>, Vec<Request>)> {
         let profile = request.meta.get("profile").cloned().unwrap_or_default();
         let url = request.meta.get("linkedin_url").cloned().unwrap_or_default();
-
         let document = Html::parse_document(&response);
-        let mut items = Vec::new();
 
-        let summary_selector = Selector::parse("section.top-card-layout").unwrap();
-        let summary_box = document.select(&summary_selector).next();
-
-        let name_selector = Selector::parse(crate::selectors::PeopleSelectors::NAME).unwrap();
-        let description_selector = Selector::parse(
-            crate::selectors::PeopleSelectors::DESCRIPTION
-        ).unwrap();
-        let subline_item_selector = Selector::parse(
-            crate::selectors::PeopleSelectors::SUBLINE_ITEM
-        ).unwrap();
-        let about_selector = Selector::parse(crate::selectors::PeopleSelectors::ABOUT).unwrap();
-
-        let name = summary_box
-            .and_then(|el| el.select(&name_selector).next())
-            .map(|el| el.text().collect::<String>().trim().to_string())
-            .unwrap_or_default();
-
-        let description = summary_box
-            .and_then(|el| el.select(&description_selector).next())
-            .map(|el| el.text().collect::<String>().trim().to_string())
-            .unwrap_or_default();
-
-        let location = summary_box
-            .and_then(|el| {
-                el.select(&Selector::parse("div.top-card__subline-item").unwrap())
-                    .next()
-                    .or_else(|| el.select(&subline_item_selector).next())
-            })
-            .map(|el| el.text().collect::<String>().trim().to_string())
-            .filter(|loc| !loc.contains("followers") && !loc.contains("connections"));
-
-        let mut followers = None;
-        let mut connections = None;
+        let summary_box = document.select(&self.summary_selector).next();
+        let (mut location, mut followers, mut connections) = (None, None, None);
 
         if let Some(box_el) = summary_box {
-            for span in box_el.select(&subline_item_selector) {
-                let text = span.text().collect::<String>();
-                if text.contains("followers") {
-                    followers = Some(text.replace(" followers", "").trim().to_string());
-                } else if text.contains("connections") {
-                    connections = Some(text.replace(" connections", "").trim().to_string());
+            let subline_items: Vec<_> = box_el
+                .select(&self.subline_item_selector)
+                .map(|el| el.text().collect::<String>().trim().to_string())
+                .collect();
+
+            for item in subline_items {
+                if item.contains("followers") {
+                    followers = Some(item.replace(" followers", ""));
+                } else if item.contains("connections") {
+                    connections = Some(item.replace(" connections", ""));
+                } else {
+                    location.get_or_insert(item);
                 }
             }
         }
 
-        let about = document
-            .select(&about_selector)
-            .next()
-            .map(|el| el.text().collect::<String>());
-
-        let exp_selector = Selector::parse(
-            crate::selectors::PeopleSelectors::EXPERIENCE_ITEM
-        ).unwrap();
-        let exp_title_selector = Selector::parse(
-            crate::selectors::PeopleSelectors::EXPERIENCE_TITLE
-        ).unwrap();
-        let exp_location_selector = Selector::parse(
-            crate::selectors::PeopleSelectors::EXPERIENCE_LOCATION
-        ).unwrap();
-        let exp_desc_more_selector = Selector::parse(
-            crate::selectors::PeopleSelectors::EXPERIENCE_DESCRIPTION_MORE
-        ).unwrap();
-        let exp_desc_less_selector = Selector::parse(
-            crate::selectors::PeopleSelectors::EXPERIENCE_DESCRIPTION_LESS
-        ).unwrap();
-        let exp_date_time_selector = Selector::parse(
-            crate::selectors::PeopleSelectors::EXPERIENCE_DATE_TIME
-        ).unwrap();
-        let exp_duration_selector = Selector::parse(
-            crate::selectors::PeopleSelectors::EXPERIENCE_DURATION
-        ).unwrap();
-
-        let experience = self.parse_experience(
-            &document,
-            &exp_selector,
-            &exp_title_selector,
-            &exp_location_selector,
-            &exp_desc_more_selector,
-            &exp_desc_less_selector,
-            &exp_date_time_selector,
-            &exp_duration_selector
-        );
-
-        let edu_selector = Selector::parse(
-            crate::selectors::PeopleSelectors::EDUCATION_ITEM
-        ).unwrap();
-        let edu_org_selector = Selector::parse(
-            crate::selectors::PeopleSelectors::EDUCATION_ORGANIZATION
-        ).unwrap();
-        let edu_link_selector = Selector::parse(
-            crate::selectors::PeopleSelectors::EDUCATION_LINK
-        ).unwrap();
-        let edu_details_selector = Selector::parse(
-            crate::selectors::PeopleSelectors::EDUCATION_DETAILS
-        ).unwrap();
-        let edu_desc_selector = Selector::parse(
-            crate::selectors::PeopleSelectors::EDUCATION_DESCRIPTION
-        ).unwrap();
-        let edu_date_time_selector = Selector::parse(
-            crate::selectors::PeopleSelectors::EDUCATION_DATE_TIME
-        ).unwrap();
-
-        let education = self.parse_education(
-            &document,
-            &edu_selector,
-            &edu_org_selector,
-            &edu_link_selector,
-            &edu_details_selector,
-            &edu_desc_selector,
-            &edu_date_time_selector
-        );
-
         let person = PersonProfile {
             profile,
             url,
-            name,
-            description,
+            name: summary_box
+                .and_then(|el| Self::extract_text(el, &self.name_selector))
+                .unwrap_or_default(),
+            description: summary_box
+                .and_then(|el| Self::extract_text(el, &self.description_selector))
+                .unwrap_or_default(),
+            about: document
+                .select(&self.about_selector)
+                .next()
+                .map(|el| el.text().collect()),
+            experience: self.parse_experience(&document),
+            education: self.parse_education(&document),
             location,
             followers,
             connections,
-            about,
-            experience,
-            education,
         };
 
-        items.push(person);
-        Ok((items, vec![]))
+        Ok((vec![person], vec![]))
     }
 }
