@@ -35,7 +35,7 @@ pub struct PersonProfile {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Experience {
-    pub organisation_profile: Option<String>,
+    pub organization_profile: Option<String>,
     pub location: Option<String>,
     pub description: Option<String>,
     pub start_time: Option<String>,
@@ -45,8 +45,8 @@ pub struct Experience {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Education {
-    pub organisation: String,
-    pub organisation_profile: Option<String>,
+    pub organization: String,
+    pub organization_profile: Option<String>,
     pub course_details: Option<String>,
     pub description: Option<String>,
     pub start_time: Option<String>,

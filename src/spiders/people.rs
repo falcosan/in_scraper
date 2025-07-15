@@ -122,7 +122,7 @@ impl PeopleProfileSpider {
                 };
 
                 Experience {
-                    organisation_profile: block
+                    organization_profile: block
                         .select(&self.exp_title_selector)
                         .next()
                         .and_then(|el| el.value().attr("href"))
@@ -160,11 +160,11 @@ impl PeopleProfileSpider {
                 };
 
                 Education {
-                    organisation: Self::extract_text(
+                    organization: Self::extract_text(
                         block,
                         &self.edu_org_selector
                     ).unwrap_or_default(),
-                    organisation_profile: block
+                    organization_profile: block
                         .select(&self.edu_link_selector)
                         .next()
                         .and_then(|el| el.value().attr("href"))
