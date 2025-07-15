@@ -43,12 +43,14 @@ impl CompanyProfileSpider {
         }
     }
 
-    fn extract_indexed_detail(&self, details: &[ElementRef], index: usize) -> Option<String> {
-        details.get(index).and_then(|detail| {
-            detail
+    fn extract_detail(&self, details: &[ElementRef], index: usize) -> Option<String> {
+        details.get(index).and_then(|detail_element| {
+            let texts: Vec<String> = detail_element
                 .select(&self.text_selector)
-                .nth(1)
                 .map(|el| el.text().collect::<String>().trim().to_string())
+                .collect();
+
+            texts.get(1).cloned()
         })
     }
 }
@@ -109,9 +111,9 @@ impl Spider for CompanyProfileSpider {
         let company = CompanyProfile {
             name,
             summary,
-            industry: self.extract_indexed_detail(&details, 1),
-            size: self.extract_indexed_detail(&details, 2),
-            founded: self.extract_indexed_detail(&details, 5),
+            industry: self.extract_detail(&details, 1),
+            size: self.extract_detail(&details, 2),
+            founded: self.extract_detail(&details, 5),
         };
 
         Ok((vec![company], vec![]))
