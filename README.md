@@ -50,10 +50,10 @@ cargo run -- jobs --keywords "data scientist" --concurrent 5 --timeout 45 --retr
 
 ```bash
 # Scrape people profiles
-cargo run -- people-profile --profiles "reidhoffman" --profiles "jeffweiner"
+cargo run -- people-profile --profiles "danielefalchetti"
 
 # With custom output directory and settings
-cargo run -- people-profile --profiles "satyanadella" --output custom_data --timeout 30
+cargo run -- people-profile --profiles "danielefalchetti" --output custom_data --timeout 30
 ```
 
 ## Command Line Options
