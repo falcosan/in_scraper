@@ -49,6 +49,12 @@ impl Config {
             }
         }
 
+        if let Ok(retry_delay) = std::env::var("RETRY_DELAY_MS") {
+            if let Ok(num) = retry_delay.parse() {
+                config.retry_delay_ms = num;
+            }
+        }
+
         if let Ok(user_agent) = std::env::var("USER_AGENT") {
             config.user_agent = user_agent;
         }
