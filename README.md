@@ -31,9 +31,6 @@ The scraper provides three main commands:
 ```bash
 # Scrape specific company profiles
 cargo run -- company-profile --urls "https://www.linkedin.com/company/microsoft" --urls "https://www.linkedin.com/company/google"
-
-# With custom settings
-cargo run -- company-profile --urls "https://www.linkedin.com/company/microsoft" --concurrent 3 --timeout 60 --retries 5
 ```
 
 ### Jobs Scraper
@@ -41,9 +38,6 @@ cargo run -- company-profile --urls "https://www.linkedin.com/company/microsoft"
 ```bash
 # Scrape job listings
 cargo run -- jobs --keywords "rust developer" --location "San Francisco"
-
-# With concurrency and custom settings
-cargo run -- jobs --keywords "data scientist" --concurrent 5 --timeout 45 --retries 3
 ```
 
 ### People Profile Scraper
@@ -51,9 +45,6 @@ cargo run -- jobs --keywords "data scientist" --concurrent 5 --timeout 45 --retr
 ```bash
 # Scrape people profiles
 cargo run -- people-profile --profiles "danielefalchetti"
-
-# With custom output directory and settings
-cargo run -- people-profile --profiles "danielefalchetti" --output custom_data --timeout 30
 ```
 
 ## Command Line Options
@@ -64,6 +55,7 @@ cargo run -- people-profile --profiles "danielefalchetti" --output custom_data -
 - `-o, --output <PATH>`: Output directory for JSON files (default: "data")
 - `--timeout <SECONDS>`: Request timeout in seconds (default: 30)
 - `--retries <N>`: Maximum number of retries for failed requests (default: 3)
+- `--proxies <PROXY1,PROXY2,...>`: Comma-separated list of proxy URLs for rotation
 
 ### Jobs Command Options
 
@@ -85,6 +77,41 @@ You can set configuration via environment variables:
 - `CONCURRENT_REQUESTS`: Number of concurrent requests
 - `REQUEST_TIMEOUT`: Request timeout in seconds
 - `MAX_RETRIES`: Maximum number of retries for failed requests
+- `RETRY_DELAY_MS`: Delay between retries in milliseconds
+- `USER_AGENT`: Custom user agent string
+- `PROXY_LIST`: Comma-separated list of proxy URLs (e.g., "http://proxy1:8080,http://proxy2:8080,socks5://proxy3:1080")
+- `PROXY_ROTATION_ENABLED`: Enable/disable proxy rotation (default: true)
+
+## Proxy Configuration
+
+The scraper supports automatic proxy rotation for each request to help avoid IP blocking and rate limiting:
+
+### Proxy Formats Supported
+
+- HTTP proxies: `http://proxy:port` or `http://user:pass@proxy:port`
+- HTTPS proxies: `https://proxy:port` or `https://user:pass@proxy:port`
+- SOCKS5 proxies: `socks5://proxy:port` or `socks5://user:pass@proxy:port`
+
+### Using Proxies
+
+#### Command Line
+
+```bash
+# Single proxy
+cargo run -- jobs --keywords "software engineer" --location "New York" --proxies "http://proxy1:8080"
+
+# Multiple proxies (will rotate automatically)
+cargo run -- jobs --keywords "software engineer" --location "New York" --proxies "http://proxy1:8080,http://proxy2:8080,socks5://proxy3:1080"
+
+# With all options
+cargo run -- people-profile \
+    --profiles "username" \
+    --proxies "http://proxy1:8080,http://proxy2:8080" \
+    --concurrent 2 \
+    --timeout 30 \
+    --retries 5 \
+    --output results
+```
 
 ## Architecture
 
@@ -105,6 +132,7 @@ The built-in HTTP client includes:
 - **Connection pooling** for better performance
 - **User-agent rotation** support
 - **Comprehensive error handling**
+- **Proxy rotation** support with automatic IP switching
 
 ## Development
 

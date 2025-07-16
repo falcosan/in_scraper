@@ -10,6 +10,8 @@ pub struct Config {
     pub request_timeout: u64,
     pub max_retries: u32,
     pub retry_delay_ms: u64,
+    pub proxies: Vec<String>,
+    pub proxy_rotation_enabled: bool,
 }
 
 impl Default for Config {
@@ -22,7 +24,9 @@ impl Default for Config {
             concurrent_requests: 1,
             output_dir: "data".to_string(),
             bot_name: "linkedin".to_string(),
-            user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36".to_string(),
+            user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36".to_string(),
+            proxies: Vec::new(),
+            proxy_rotation_enabled: true,
         }
     }
 }
@@ -49,6 +53,38 @@ impl Config {
             }
         }
 
+        if let Ok(retry_delay) = std::env::var("RETRY_DELAY_MS") {
+            if let Ok(num) = retry_delay.parse() {
+                config.retry_delay_ms = num;
+            }
+        }
+
+        if let Ok(proxy_list) = std::env::var("PROXY_LIST") {
+            config.proxies = proxy_list
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect();
+        }
+
+        if let Ok(proxy_rotation) = std::env::var("PROXY_ROTATION_ENABLED") {
+            if let Ok(enabled) = proxy_rotation.parse() {
+                config.proxy_rotation_enabled = enabled;
+            }
+        }
+
+        if let Ok(user_agent) = std::env::var("USER_AGENT") {
+            config.user_agent = user_agent;
+        }
+
         config
+    }
+
+    pub fn has_proxies(&self) -> bool {
+        !self.proxies.is_empty() && self.proxy_rotation_enabled
+    }
+
+    pub fn proxy_count(&self) -> usize {
+        if self.proxy_rotation_enabled { self.proxies.len() } else { 0 }
     }
 }
