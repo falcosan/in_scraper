@@ -5,7 +5,6 @@ use tracing::{ info, error };
 use clap::{ Parser, Subcommand };
 use in_scraper::{
     config::Config,
-    utils::ProxyValidator,
     pipeline::JsonPipeline,
     spiders::{ CompanyProfileSpider, JobsSpider, PeopleProfileSpider, Spider },
 };
@@ -24,20 +23,17 @@ enum Commands {
         #[arg(long)]
         urls: Vec<String>,
 
-        #[arg(short, long, default_value = "1")]
+        #[arg(short, long, default_value_t = 1)]
         concurrent: usize,
 
         #[arg(short, long, default_value = "data")]
         output: String,
 
-        #[arg(long)]
-        timeout: Option<u64>,
+        #[arg(long, default_value_t = 30)]
+        timeout: u64,
 
-        #[arg(long)]
-        retries: Option<u32>,
-
-        #[arg(long, value_delimiter = ',')]
-        proxies: Option<Vec<String>>,
+        #[arg(long, default_value_t = 3)]
+        retries: u32,
     },
     Jobs {
         #[arg(long)]
@@ -45,39 +41,33 @@ enum Commands {
         #[arg(long)]
         location: String,
 
-        #[arg(short, long, default_value = "1")]
+        #[arg(short, long, default_value_t = 1)]
         concurrent: usize,
 
         #[arg(short, long, default_value = "data")]
         output: String,
 
-        #[arg(long)]
-        timeout: Option<u64>,
+        #[arg(long, default_value_t = 30)]
+        timeout: u64,
 
-        #[arg(long)]
-        retries: Option<u32>,
-
-        #[arg(long, value_delimiter = ',')]
-        proxies: Option<Vec<String>>,
+        #[arg(long, default_value_t = 3)]
+        retries: u32,
     },
     PeopleProfile {
         #[arg(long)]
         profiles: Vec<String>,
 
-        #[arg(short, long, default_value = "1")]
+        #[arg(short, long, default_value_t = 1)]
         concurrent: usize,
 
         #[arg(short, long, default_value = "data")]
         output: String,
 
-        #[arg(long)]
-        timeout: Option<u64>,
+        #[arg(long, default_value_t = 30)]
+        timeout: u64,
 
-        #[arg(long)]
-        retries: Option<u32>,
-
-        #[arg(long, value_delimiter = ',')]
-        proxies: Option<Vec<String>>,
+        #[arg(long, default_value_t = 3)]
+        retries: u32,
     },
 }
 
@@ -86,154 +76,46 @@ async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
     let cli = Cli::parse();
-
     let mut config = Config::from_env();
 
     match &cli.command {
-        Commands::CompanyProfile { urls: _, concurrent, output, timeout, retries, proxies } => {
-            configure_and_run_company_profile(
-                &mut config,
-                &cli.command,
-                *concurrent,
-                output,
-                *timeout,
-                *retries,
-                proxies
-            ).await?;
+        Commands::CompanyProfile { urls, concurrent, output, timeout, retries } => {
+            configure_common(&mut config, *concurrent, output, *timeout, *retries);
+            let config = Arc::new(config);
+            let pipeline = Arc::new(JsonPipeline::new(config.clone()));
+            let spider = CompanyProfileSpider::new(config.clone(), urls.clone());
+            run_spider(spider, pipeline).await?;
         }
-        Commands::Jobs {
-            keywords: _,
-            location: _,
-            concurrent,
-            output,
-            timeout,
-            retries,
-            proxies,
-        } => {
-            configure_and_run_jobs(
-                &mut config,
-                &cli.command,
-                *concurrent,
-                output,
-                *timeout,
-                *retries,
-                proxies
-            ).await?;
+        Commands::Jobs { keywords, location, concurrent, output, timeout, retries } => {
+            configure_common(&mut config, *concurrent, output, *timeout, *retries);
+            let config = Arc::new(config);
+            let pipeline = Arc::new(JsonPipeline::new(config.clone()));
+            let spider = JobsSpider::new(config.clone(), keywords.clone(), location.clone());
+            run_spider(spider, pipeline).await?;
         }
-        Commands::PeopleProfile { profiles: _, concurrent, output, timeout, retries, proxies } => {
-            configure_and_run_people_profile(
-                &mut config,
-                &cli.command,
-                *concurrent,
-                output,
-                *timeout,
-                *retries,
-                proxies
-            ).await?;
+        Commands::PeopleProfile { profiles, concurrent, output, timeout, retries } => {
+            configure_common(&mut config, *concurrent, output, *timeout, *retries);
+            let config = Arc::new(config);
+            let pipeline = Arc::new(JsonPipeline::new(config.clone()));
+            let spider = PeopleProfileSpider::new(config.clone(), profiles.clone());
+            run_spider(spider, pipeline).await?;
         }
     }
 
     Ok(())
 }
 
-async fn configure_and_run_company_profile(
-    config: &mut Config,
-    command: &Commands,
-    concurrent: usize,
-    output: &str,
-    timeout: Option<u64>,
-    retries: Option<u32>,
-    proxies: &Option<Vec<String>>
-) -> Result<()> {
-    if let Commands::CompanyProfile { urls, .. } = command {
-        configure_common(config, concurrent, output, timeout, retries, proxies).await?;
-        let config = Arc::new(config.clone());
-        let pipeline = Arc::new(JsonPipeline::new(config.clone()));
-        let spider = CompanyProfileSpider::new(config.clone(), urls.clone());
-        run_spider(spider, pipeline).await?;
-    }
-    Ok(())
-}
-
-async fn configure_and_run_jobs(
-    config: &mut Config,
-    command: &Commands,
-    concurrent: usize,
-    output: &str,
-    timeout: Option<u64>,
-    retries: Option<u32>,
-    proxies: &Option<Vec<String>>
-) -> Result<()> {
-    if let Commands::Jobs { keywords, location, .. } = command {
-        configure_common(config, concurrent, output, timeout, retries, proxies).await?;
-        let config = Arc::new(config.clone());
-        let pipeline = Arc::new(JsonPipeline::new(config.clone()));
-        let spider = JobsSpider::new(config.clone(), keywords.clone(), location.clone());
-        run_spider(spider, pipeline).await?;
-    }
-    Ok(())
-}
-
-async fn configure_and_run_people_profile(
-    config: &mut Config,
-    command: &Commands,
-    concurrent: usize,
-    output: &str,
-    timeout: Option<u64>,
-    retries: Option<u32>,
-    proxies: &Option<Vec<String>>
-) -> Result<()> {
-    if let Commands::PeopleProfile { profiles, .. } = command {
-        configure_common(config, concurrent, output, timeout, retries, proxies).await?;
-        let config = Arc::new(config.clone());
-        let pipeline = Arc::new(JsonPipeline::new(config.clone()));
-        let spider = PeopleProfileSpider::new(config.clone(), profiles.clone());
-        run_spider(spider, pipeline).await?;
-    }
-    Ok(())
-}
-
-async fn configure_common(
+fn configure_common(
     config: &mut Config,
     concurrent: usize,
     output: &str,
-    timeout: Option<u64>,
-    retries: Option<u32>,
-    proxies: &Option<Vec<String>>
-) -> Result<()> {
+    timeout: u64,
+    retries: u32
+) {
     config.concurrent_requests = concurrent;
     config.output_dir = output.to_string();
-
-    if let Some(timeout) = timeout {
-        config.request_timeout = timeout;
-    }
-
-    if let Some(retries) = retries {
-        config.max_retries = retries;
-    }
-
-    if let Some(proxies) = proxies {
-        info!("Validating {} proxies from command line...", proxies.len());
-        let validator = ProxyValidator::new();
-        let valid_proxies = validator.validate_proxies(proxies).await;
-
-        if valid_proxies.is_empty() {
-            error!("No valid proxies found! Running without proxy rotation.");
-            config.proxy_rotation_enabled = false;
-        } else {
-            config.proxies = valid_proxies;
-            config.proxy_rotation_enabled = true;
-            info!("Using {} validated proxies", config.proxies.len());
-        }
-    }
-
-    if config.has_proxies() {
-        info!("Proxy rotation enabled with {} proxies", config.proxy_count());
-    } else {
-        info!("Running without proxy rotation");
-    }
-
-    Ok(())
+    config.request_timeout = timeout;
+    config.max_retries = retries;
 }
 
 async fn run_spider<S: Spider + 'static>(spider: S, pipeline: Arc<JsonPipeline>) -> Result<()> {

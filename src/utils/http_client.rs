@@ -1,68 +1,63 @@
+// use std::env;
+// use dotenv::dotenv;
 use std::sync::Arc;
 use tokio::time::sleep;
 use std::time::Duration;
 use crate::config::Config;
-use crate::utils::ProxyRotator;
+use tracing::{ error, warn };
 use anyhow::{ Result, Context };
-use tracing::{ error, warn, info, debug };
-use reqwest::{ Client, Response, StatusCode, Proxy };
+use reqwest::{ Client, Response, StatusCode };
 
 pub struct HttpClient {
+    client: Client,
     config: Arc<Config>,
-    proxy_rotator: Option<Arc<ProxyRotator>>,
+    // li_at_cookie: String,
+    // jsession_id_cookie: String,
 }
 
 impl HttpClient {
     pub fn new(config: Arc<Config>) -> Result<Self> {
-        let proxy_rotator = if !config.proxies.is_empty() {
-            let rotator = Arc::new(ProxyRotator::new(config.proxies.clone()));
-            info!("HTTP client initialized with {} proxies", rotator.proxy_count());
-            Some(rotator)
-        } else {
-            info!("HTTP client initialized without proxies");
-            None
-        };
+        // dotenv().ok();
+        // let li_at_cookie = env
+        //     ::var("LINKEDIN_COOKIE_LI_AT")
+        //     .context("LINKEDIN_COOKIE_LI_AT variable not set in .env file")?;
+
+        // let jsession_id_cookie = env
+        //     ::var("LINKEDIN_COOKIE_JSESSIONID")
+        //     .context("LINKEDIN_COOKIE_JSESSIONID variable not set in .env file")?;
+
+        let client = Client::builder()
+            .timeout(Duration::from_secs(config.request_timeout))
+            .user_agent(&config.user_agent)
+            .gzip(true)
+            .pool_max_idle_per_host(10)
+            .tcp_keepalive(Duration::from_secs(60))
+            .build()
+            .context("Failed to build HTTP client")?;
 
         Ok(Self {
+            client,
             config,
-            proxy_rotator,
+            // li_at_cookie,
+            // jsession_id_cookie
         })
     }
 
-    fn create_client_with_proxy(&self, proxy_url: Option<&str>) -> Result<Client> {
-        let mut builder = Client::builder()
-            .timeout(Duration::from_secs(self.config.request_timeout))
-            .user_agent(&self.config.user_agent)
-            .gzip(true)
-            .pool_max_idle_per_host(0)
-            .tcp_keepalive(Duration::from_secs(60))
-            .connection_verbose(false);
-
-        if let Some(proxy_url) = proxy_url {
-            let proxy = Proxy::all(proxy_url).context("Failed to create proxy")?;
-            builder = builder.proxy(proxy);
-            debug!("HTTP client configured with proxy: {}", proxy_url);
-        }
-
-        builder.build().context("Failed to build HTTP client")
-    }
-
     pub async fn get(&self, url: &str) -> Result<Response> {
-        self.execute_with_retry(|| async {
-            let proxy_url = self.get_next_proxy();
-            let client = self.create_client_with_proxy(proxy_url.as_deref())?;
-
-            if let Some(ref proxy) = proxy_url {
-                debug!("Making request to {} using proxy: {}", url, proxy);
-            } else {
-                debug!("Making request to {} without proxy", url);
-            }
-
-            client
+        // let cookie_header = format!(
+        //     "li_at={}; jsessionid={}",
+        //     self.li_at_cookie,
+        //     self.jsession_id_cookie
+        // );
+        self.execute_with_retry(||
+            self.client
                 .get(url)
-                .send().await
-                .map_err(|e| anyhow::anyhow!(e))
-        }).await
+                // .header("cookie", &cookie_header)
+                // .header("referer", "https://www.linkedin.com/feed/")
+                // .header("accept", "application/vnd.linkedin.normalized+json+2.1")
+                // .header("csrf-token", self.jsession_id_cookie.replace("\"", ""))
+                .send()
+        ).await
     }
 
     pub async fn get_text(&self, url: &str) -> Result<String> {
@@ -71,22 +66,8 @@ impl HttpClient {
         Ok(text)
     }
 
-    fn get_next_proxy(&self) -> Option<String> {
-        self.proxy_rotator.as_ref().and_then(|r| r.get_next_proxy())
-    }
-
-    pub fn has_proxies(&self) -> bool {
-        self.proxy_rotator.as_ref().is_some_and(|r| r.has_proxies())
-    }
-
-    pub fn proxy_count(&self) -> usize {
-        self.proxy_rotator.as_ref().map_or(0, |r| r.proxy_count())
-    }
-
     async fn execute_with_retry<F, Fut>(&self, request_fn: F) -> Result<Response>
-        where
-            F: Fn() -> Fut + Send + Sync,
-            Fut: std::future::Future<Output = Result<Response>> + Send
+        where F: Fn() -> Fut, Fut: std::future::Future<Output = Result<Response, reqwest::Error>>
     {
         let mut retries = 0;
         let max_retries = self.config.max_retries;
@@ -102,33 +83,19 @@ impl HttpClient {
                     }
 
                     if status == StatusCode::TOO_MANY_REQUESTS {
-                        warn!("Rate limited (429), will retry with different proxy after delay");
+                        warn!("Rate limited (429), retrying after delay");
                         if retries < max_retries {
                             retries += 1;
-                            let delay = retry_delay * retries;
-                            debug!(
-                                "Waiting {}ms before retry {}/{}",
-                                delay.as_millis(),
-                                retries,
-                                max_retries + 1
-                            );
-                            sleep(delay).await;
+                            sleep(retry_delay * retries).await;
                             continue;
                         }
                     }
 
                     if status.is_server_error() {
-                        error!("Server error: {}, will retry with different proxy", status);
+                        error!("Server error: {}, retrying", status);
                         if retries < max_retries {
                             retries += 1;
-                            let delay = retry_delay * retries;
-                            debug!(
-                                "Waiting {}ms before retry {}/{}",
-                                delay.as_millis(),
-                                retries,
-                                max_retries + 1
-                            );
-                            sleep(delay).await;
+                            sleep(retry_delay * retries).await;
                             continue;
                         }
                     }
@@ -145,14 +112,8 @@ impl HttpClient {
 
                     if retries < max_retries {
                         retries += 1;
-                        let delay = retry_delay * retries;
-                        warn!(
-                            "Retrying request with different proxy (attempt {}/{}) after {}ms",
-                            retries,
-                            max_retries + 1,
-                            delay.as_millis()
-                        );
-                        sleep(delay).await;
+                        warn!("Retrying request (attempt {}/{})", retries, max_retries + 1);
+                        sleep(retry_delay * retries).await;
                         continue;
                     }
 
@@ -167,9 +128,6 @@ impl HttpClient {
 
 impl Clone for HttpClient {
     fn clone(&self) -> Self {
-        Self {
-            config: self.config.clone(),
-            proxy_rotator: self.proxy_rotator.clone(),
-        }
+        Self::new(self.config.clone()).expect("Failed to clone HttpClient")
     }
 }
