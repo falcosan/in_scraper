@@ -113,7 +113,7 @@ impl PeopleProfileSpider {
     }
 
     fn build_url(&self, profile: &str) -> String {
-        format!("https://www.linkedin.com/in/{profile}/")
+        format!("https://linkedin.com/in/{profile}/")
     }
 
     fn extract_text(element: ElementRef, selector: &Selector) -> Option<String> {
@@ -326,19 +326,19 @@ impl Spider for PeopleProfileSpider {
         let decoded = decode(response.as_bytes());
         let document = Html::parse_document(&decoded.to_string().unwrap());
 
-        std::fs
-            ::write(
-                format!(
-                    "{}.html",
-                    url
-                        .strip_prefix("https://")
-                        .or_else(|| url.strip_prefix("http://"))
-                        .unwrap_or(&url)
-                        .replace("/", "_")
-                ),
-                document.html()
-            )
-            .unwrap();
+        // std::fs
+        //     ::write(
+        //         format!(
+        //             "{}.html",
+        //             url
+        //                 .strip_prefix("https://")
+        //                 .or_else(|| url.strip_prefix("http://"))
+        //                 .unwrap_or(&url)
+        //                 .replace("/", "_")
+        //         ),
+        //         document.html()
+        //     )
+        //     .unwrap();
 
         let summary_box = document.select(&self.selectors.summary).next();
         let (location, followers, connections) = if let Some(box_el) = summary_box {
