@@ -31,9 +31,6 @@ The scraper provides three main commands:
 ```bash
 # Scrape specific company profiles
 cargo run -- company-profile --urls "https://www.linkedin.com/company/microsoft" --urls "https://www.linkedin.com/company/google"
-
-# With custom settings
-cargo run -- company-profile --urls "https://www.linkedin.com/company/microsoft" --concurrent 3 --timeout 60 --retries 5
 ```
 
 ### Jobs Scraper
@@ -41,9 +38,6 @@ cargo run -- company-profile --urls "https://www.linkedin.com/company/microsoft"
 ```bash
 # Scrape job listings
 cargo run -- jobs --keywords "rust developer" --location "San Francisco"
-
-# With concurrency and custom settings
-cargo run -- jobs --keywords "data scientist" --concurrent 5 --timeout 45 --retries 3
 ```
 
 ### People Profile Scraper
@@ -51,9 +45,6 @@ cargo run -- jobs --keywords "data scientist" --concurrent 5 --timeout 45 --retr
 ```bash
 # Scrape people profiles
 cargo run -- people-profile --profiles "danielefalchetti"
-
-# With custom output directory and settings
-cargo run -- people-profile --profiles "danielefalchetti" --output custom_data --timeout 30
 ```
 
 ## Command Line Options
@@ -85,6 +76,8 @@ You can set configuration via environment variables:
 - `CONCURRENT_REQUESTS`: Number of concurrent requests
 - `REQUEST_TIMEOUT`: Request timeout in seconds
 - `MAX_RETRIES`: Maximum number of retries for failed requests
+- `RETRY_DELAY_MS`: Delay between retries in milliseconds
+- `USER_AGENT`: Custom user agent string
 
 ## Architecture
 
