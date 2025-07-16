@@ -76,7 +76,7 @@ impl HttpClient {
     }
 
     pub fn has_proxies(&self) -> bool {
-        self.proxy_rotator.as_ref().map_or(false, |r| r.has_proxies())
+        self.proxy_rotator.as_ref().is_some_and(|r| r.has_proxies())
     }
 
     pub fn proxy_count(&self) -> usize {
